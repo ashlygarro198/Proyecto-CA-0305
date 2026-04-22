@@ -47,9 +47,35 @@ Alessandro Umaña Vega & C37963 \\
 \subsection*{Task 04: Tensor Reshaping \& Transposing}
 
 \subsection*{Task 05: Reduction Operations}
+Las operaciones de reducción son funciones que toman un tensor de gran dimensión
+y lo transforman en uno de menor dimensión, colapsando una o más dimensiones mediante alguna operación. \\
+Un tensor es un arreglo multidimensional de números, un ejemplo de esto es una matriz de dos dimensiones. 
+La idea central al colapsar estos tensores es que, en muchas ocasiones, se tienen una gran cantidad de valores
+organizados en varias dimensiones, pero se necesita resumirlos en algo más simple y manejable. \\
+Las cuatro operaciones implementadas corresponden a distintas maneras de colapasar estos tensores. La suma acumula
+todos los elementos de la dimensión especificada. La media divide esa suma entre la cantidad de elementos de esa dimensión, lo que la hace
+independiente del tamaño del arreglo. El máximo selecciona el valor más grande de esa dimensión. Finalmente, el argmax está relacionado
+con el máximo pero en lugar de devolver el valor más grande, devuelve el índice donde se encuentra ese valor. \\
 
 \subsection*{Task 06: Vector Norms (L1, L2)}
-
+Una norma es una función que toma un vector y cuantifica su tamaño o "longitud". En este caso, la longitud no se 
+refiere a la longitud física, sino a una medida de qué tan grande es el vector en términos de sus componentes. \\
+La norma L1 mide el tamaño de un vector sumando los valores absolutos de todos sus componentes: $\displaystyle \sum_{i=1}^{D} \mid x_i \mid$.
+El valor absoluto es necesario ya que sin él los valores negativos cancelarían los positivos y el resultado no representaría una magnitud real.\\
+En la norma L2 \Bigg($\displaystyle \sqrt{\sum_{i=1}^{D} x_i^2}$\Bigg), el cuadrado elimina los signos negativos igual que el valor absoluto en L1, y la raíz cuadrada al final devuelve el resultado a las
+unidades originales. Geométricamente mide la distancia en línea recta desde el origen hasta el punto que representa el vector, que es exactamente la 
+distancia euclideana clásica. \\
+Para entender la importancia de estas normas en la práctica, es importante entender qué son los pesos y cómo se entrenan. Los pesos son números internos
+de la red que determinan cómo procesa la información. Al principio se inicializan con valores aleatorios y la red no sabe nada. El entrenamiento es el 
+proceso de ajustar esos pesos poco a poco, la red procesa una entrada, se calcula el error que cometió, se determina en qué dirección ajustar cada peso 
+para reducir ese error, y se aplica ese ajuste. Luego de repetir este ciclo millones de veces con muchos ejemplos, los pesos van tomando valores que hacen
+que la red produzca respuestas cada vez más correctas.\\
+El uso de las normas empieza a lo largo de este proceso, durante este, los pesos puede crecer en gran magnitud, llevando a que la red memorice los datos en vez
+de aprender patrones. Las normas permiten medir y controlar ese crecimiento de dos maneras. La primera es la regularización, donde al calcular el loss (qué tan equivocada
+estuvo la red), se agrega un término extra basado en la norma de los pesos que castiga valores grandes (si los valores son grandes el loss aumenta y la red no lo pudo minimizar),
+obligando a la red a mantener pesos pequeños mientras minimiza el error. \\
+La segunda es el gradient clipping, donde se calcula la norma L2 de los ajustes que se le van a aplicar a los pesos y si se supera un umbral se reducen proporcionalmente antes de
+ aplicarlos, evitando que el entrenamiento se desestabilice por actualizaciones demasiado grandes. 
 \subsection*{Task 07: Dot Product \& Cross Product}
 
 \subsection*{Task 08: Einstein Summation (einsum) Basics}
@@ -63,7 +89,22 @@ Alessandro Umaña Vega & C37963 \\
 \subsection*{Task 12: One-Hot Encoding}
 
 \subsection*{Task 13: Softmax Implementation (Stable)}
-
+La función softmax es una transformación que toma un vector de valores reales
+arbitrarios (llamados logits) y los convierte en una distribución de probabilidad 
+válida, lo que permite interpretarlos como la probabilidad de que una muestra 
+pertenezca a cada clase.\\
+Su fórmula es $\displaystyle \frac{e^{x_i}}{\sum_{j=i}^{C} e^{x_j}}$ donde $x_i$ es el 
+logit de la clase $i$ y $C$ es el número total de clases. En primer lugar, la exponencial convierte cualquier
+valor real en un número positivo, lo que garantiza probabilidades positivas. 
+Segundo, aumenta las diferencias entre logits de forma no lineal, si un logit es ligeramente mayor que los demás,
+su exponencial será más grande en gran magnitud, produciendo una probabilidad dominante. Al dividir entre la suma
+de todas las exponenciales, se normaliza el resultado para que todo sume 1.\\
+En el contexto de redes neuronales, el softmax ocupa un lugar importante en la estructura de cualquier red de clasificación.
+Todo lo que hacen las tareas anteriores (procesar entradas, extraer características, aprender patrones), termina produciendo
+un vector de logits que por sí solos no son interpretables. El softmax es la última capa que convierte esos logits en probabilidades
+con significado real e interpretable. Sin este, o sería posible calcular el cross-entropy loss, que es el número que mide el error de
+la red y guía el ajuste de sus pesos durante el entrenamiento. En ese sentido el softmax es el puente entre las operaciones internas de 
+la red y la salida interpretable.
 \subsection*{Task 14: Cross-Entropy Loss (Manual)}
 
 \subsection*{Task 15: Numerical Stability (Log-Sum-Exp)}
