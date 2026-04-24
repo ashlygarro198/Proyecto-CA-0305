@@ -41,7 +41,15 @@ Alessandro Umaña Vega & C37963 \\
 \subsection*{Task 01: Tensor Broadcasting Basics}
 
 \subsection*{Task 02: Matrix Multiplication (Naive vs Vectorized)}
-
+Las operaciones entre matrices son permite combinar dos matrices y obtener una nueva, se tiene dos matrices A
+ y B , donde las dimensiones de A son (N, K) y las de B son (K, M), entonces definimos la nueva
+  matriz C como c=AB, note que es importante verificar que las columnas de A y las filas de B sean del mismo tamaño
+  para poder realizar la multiplicación. Dado la multiolicación las dimensiones de la matriz C serían (N,M).\\
+Para poder calcular las entradas de la matriz C lo que se realiza es que cada entrada(i,j) de la matriz se calcula
+ mediante el producto punto, donde se multiplica la fila A por la columna B y se suma cada entrada de esa multiplicación.
+ De esta manera se consigue cada entrada de la matriz C. Tenemos dos formas de realizar este cálculo, mediante
+  la fórmula matemática con la sumatoria de la multiplicación de las entradas y usando las funciones numpy
+   que hacen multiplicación vectorial de forma automática.
 \subsection*{Task 03: Element-wise Operations}
 
 \subsection*{Task 04: Tensor Reshaping \& Transposing}
