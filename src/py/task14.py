@@ -5,14 +5,19 @@ import numpy as np
 
 def cross_entropy_loss(probs, targets):
 
+    # Número de ejemplos
     N = len(targets)
 
+    # Probabilidad asignada a la clase correcta
     correct_probs = probs[np.arange(N), targets]
 
+    # este es el epsilon para evitar conflictos numericos
     eps = 1e-9
 
+    # Logaritmo de las probabilidades correctas
     log_probs = np.log(correct_probs + eps)
 
+    # Promedio de la pérdida negativa
     loss = -np.mean(log_probs)
 
     return loss
