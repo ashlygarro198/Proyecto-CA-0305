@@ -41,7 +41,15 @@ Alessandro Umaña Vega & C37963 \\
 \subsection*{Task 01: Tensor Broadcasting Basics}
 
 \subsection*{Task 02: Matrix Multiplication (Naive vs Vectorized)}
-
+Las operaciones entre matrices son permite combinar dos matrices y obtener una nueva, se tiene dos matrices A
+ y B , donde las dimensiones de A son (N, K) y las de B son (K, M), entonces definimos la nueva
+  matriz C como c=AB, note que es importante verificar que las columnas de A y las filas de B sean del mismo tamaño
+  para poder realizar la multiplicación. Dado la multiolicación las dimensiones de la matriz C serían (N,M).\\
+Para poder calcular las entradas de la matriz C lo que se realiza es que cada entrada(i,j) de la matriz se calcula
+ mediante el producto punto, donde se multiplica la fila A por la columna B y se suma cada entrada de esa multiplicación.
+ De esta manera se consigue cada entrada de la matriz C. Tenemos dos formas de realizar este cálculo, mediante
+  la fórmula matemática con la sumatoria de la multiplicación de las entradas y usando las funciones numpy
+   que hacen multiplicación vectorial de forma automática.
 \subsection*{Task 03: Element-wise Operations}
 
 \subsection*{Task 04: Tensor Reshaping \& Transposing}
@@ -106,8 +114,19 @@ con significado real e interpretable. Sin este, o sería posible calcular el cro
 la red y guía el ajuste de sus pesos durante el entrenamiento. En ese sentido el softmax es el puente entre las operaciones internas de 
 la red y la salida interpretable.
 \subsection*{Task 14: Cross-Entropy Loss (Manual)}
-
+La cross-entropy es una función de perdida utilizada principalmente para cuantificar que tan diferentes son dos distribuciones que predicen un mismo modelo.
+Este modelo se enfoca en la probabilidad asignada a la clase correcta, su función principal es que califica el modelo según cuanta probabilidad le asigna a la respuesta correcta, si se le asigna mucha probabilidad entonces el error es pequeño por otro lado si se le asigna muy poca probabilidad el error crece mucho. En vez de solo decir si el resultado es correcto o incorrecto este modelo mide que tan acertado o equivocado esta el modelo simultáneamente, el objetivo de este modelo es que vaya aumentado la probabilidad de respuesta correcta conforme aumentan los intentos.
 \subsection*{Task 15: Numerical Stability (Log-Sum-Exp)}
+El truco de log-sum Exp es una técnica para poder calcular expresiones de la forma \[
+\log\left(\sum_{j=1}^{D} e^{x_j}\right)
+\]
+De forma que cuando se evalúan números muy grandes estos no se vayan hacia infinito y se pueda llegar a una aproximación realista. Si se calculara sin este truco la gran mayoría de veces daría infinito, para esto se usa la identidad \[
+\log\left(\sum_{j=1}^{D} e^{x_j}\right)
+=
+m+\log\left(\sum_{j=1}^{D} e^{x_j-m}\right)
+\]
+La idea es que la suma de exponenciales puede reescribirse factorizando el valor máximo de los exponentes. Al hacer esto, se extrae ese máximo fuera de la suma y se convierte en un término separado. Luego, usando la propiedad del logaritmo de que el logaritmo de un producto es igual a la suma de los logaritmos, se separa la expresión en dos partes: el máximo y el logaritmo de una suma de exponentes ajustados.
+Donde denotamos m como el max de los exponentes de todas las exponenciales, así si restamos este a todas las otras, su mayor valor puede ser 1 aprovechando las propiedades que tenemos sobre "e" cuando tiende a -infinito. Se utiliza N como cantidad de filas y D cantidad de valores por fila, el procedimiento para realizar este truco es encontrar el max de cada fila, restarlo para ajustar los exponentes de la e, aplicar exponencial y sumar por fila, aplicamos el logaritmo y sumamos nuevamente el máximo encontrado. El resultado final es un vector de tamaño (N, ) con el log-sum-exp de cada fila.
 
 % -------------------------
 \section*{Conclusiones}
