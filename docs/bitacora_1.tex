@@ -39,6 +39,32 @@ Alessandro Umaña Vega & C37963 \\
 \section*{Fundamentación Matemática}
 
 \subsection*{Task 01: Tensor Broadcasting Basics}
+El broadcasting es un mecanismo para realizar operaciones entre arreglos que no tienen exactamente la misma forma. En lugar de exigir que ambos tengan dimensiones idénticas, NumPy ajusta internamente el arreglo más pequeño para que sea compatible con el más grande. 
+
+La idea central es que NumPy compara las dimensiones de los arreglos desde la derecha hacia la izquierda. Dos dimensiones son compatibles si son iguales o si una de ellas es 1. Cuando aparece un 1, NumPy lo “estira” para que coincida con la otra dimensión, como si repitiera sus valores. Gracias a esto, un vector puede aplicarse a todas las filas o columnas de una matriz sin necesidad de escribir ciclos o replicar datos manualmente.
+
+Desde el punto de vista matemático, la operación $Y = (X + b) \odot w$ combina dos transformaciones distintas aplicadas a los datos. Por un lado, se tiene una matriz $X \in \mathbb{R}^{N \times D}$, donde cada fila representa una muestra y cada columna una característica. El vector $b \in \mathbb{R}^D$ actúa como un sesgo que se suma a cada una de esas muestras.
+
+Cuando se realiza la suma $X + b$, en realidad se está sumando cada componente $b_j$ a todas las entradas de la columna $j$. 
+\begin{equation}
+    (X + b)_{ij} = X_{ij} + b_j
+\end{equation}
+
+Donde en esta operación cada punto (fila de $X$) se desplaza en la misma dirección y magnitud determinada por $b$, sin alterar la forma relativa del conjunto de datos.
+
+Una vez realizada esta traslación, interviene el vector $w \in \mathbb{R}^N$, que introduce un escalamiento dependiente de cada muestra. La operación elemento a elemento $\odot$ indica que cada fila completa del resultado anterior se multiplica por un escalar distinto. En términos formales:
+\begin{equation}
+    Y_{ij} = (X_{ij} + b_j) \cdot w_i
+\end{equation}
+
+Es importante notar que el factor de escala depende únicamente de la fila e independientemente de la columna, lo que implica que cada vector de características $X_i + b$ se estira o se contrae uniformemente en todas sus dimensiones.
+
+
+En conclusión, el vector $b \in \mathbb{R}^D$ se interpreta implícitamente como un arreglo de dimensión $(1, D)$, el cual se expande a $(N, D)$ repitiéndose a lo largo de las filas. 
+
+Por otro lado, el vector $w \in \mathbb{R}^N$ se interpreta como de dimensión $(N, 1)$, de modo que puede expandirse a $(N, D)$ repitiéndose a lo largo de las columnas. Esta reinterpretación de dimensiones permite que ambas operaciones sean compatibles sin necesidad de crear explícitamente matrices de mayor tamaño.
+
+Esta mecánica asegura que la combinación de una traslación y un escalamiento se ejecute con una eficiencia computacional óptima, manteniendo la integridad dimensional del sistema original.
 
 \subsection*{Task 02: Matrix Multiplication (Naive vs Vectorized)}
 Las operaciones entre matrices son permite combinar dos matrices y obtener una nueva, se tiene dos matrices A
@@ -51,6 +77,35 @@ Para poder calcular las entradas de la matriz C lo que se realiza es que cada en
   la fórmula matemática con la sumatoria de la multiplicación de las entradas y usando las funciones numpy
    que hacen multiplicación vectorial de forma automática.
 \subsection*{Task 03: Element-wise Operations}
+
+La función \text{elementwise\_ops(a, b)} toma dos tensores $a$ y $b$ de la misma forma para calcular tres operaciones elemento a elemento: suma, multiplicación y división segura. El resultado se organiza en un diccionario con las claves \textit{add}, \textit{mul} y \textit{div}. La característica esencial es que cada operación se realiza de manera independiente en cada posición del arreglo, sin mezcla entre diferentes índices.
+
+
+Si consideramos $a, b \in \mathbb{R}^n$  la suma se define componente a componente como:
+\begin{equation}
+    c_i = a_i + b_i
+\end{equation}
+
+Donde cada componente del resultado es simplemente la suma de los componentes correspondientes de $a$ y $b$.
+
+Para la multiplicación, se utiliza el denominado producto de Hadamard:
+\begin{equation}
+    c_i = a_i \cdot b_i 
+\end{equation}
+
+En esta operación, cada componente se multiplica directamente con su par correspondiente sin mezclar dimensiones. 
+
+La tercera operación es la división segura, definida mediante la introducción de un parámetro $\varepsilon$:
+\begin{equation}
+    c_i = \frac{a_i}{b_i + \varepsilon}
+\end{equation}
+donde $\varepsilon = 10^{-8}$. Este término es fundamental pues si algún $b_i = 0$, la división directa no estaría definida. Al sumar $\varepsilon$, se garantiza que:
+\begin{equation}
+    b_i + \varepsilon \neq 0
+\end{equation}
+
+Esto asegura que la operación siempre esté bien definida. Aunque introduce un sesgo mínimo, este es despreciable. Por otro lado, previene errores críticos como la aparición de valores infinitos durante la ejecución.
+
 
 \subsection*{Task 04: Tensor Reshaping \& Transposing}
 
@@ -87,6 +142,46 @@ La segunda es el gradient clipping, donde se calcula la norma L2 de los ajustes 
 \subsection*{Task 07: Dot Product \& Cross Product}
 
 \subsection*{Task 08: Einstein Summation (einsum) Basics}
+La función \text{einsum\_ops(A, B)} toma dos matrices $A \in \mathbb{R}^{N \times D}$ y $B \in \mathbb{R}^{D \times M}$, y utiliza la función (\text{np.einsum}) para realizar cinco operaciones fundamentales: transposición, suma total, suma por filas, suma por columnas y multiplicación matricial. Todas estas operaciones se describen mediante índices.
+
+\text{np.einsum} es una función de NumPy que permite realizar operaciones con tensores utilizando una notación basada en índices. En lugar de usar funciones separadas para cada operación, como suma, transposición o multiplicación matricial, einsum describe directamente cómo se deben combinar las dimensiones de los arreglos mediante letras. Cada letra representa una dimensión del tensor, y la forma en que estas letras aparecen o desaparecen indica qué operación se está realizando.
+
+Cuando se usa einsum, se especifica primero cómo están organizados los índices de los tensores de entrada y luego cómo deben aparecer en el resultado. Si un índice aparece en la entrada pero no en la salida, significa que se debe sumar sobre esa dimensión. Si un índice aparece en más de un tensor de entrada, se interpreta que los elementos correspondientes se multiplican y luego se suman sobre ese índice. Por otro lado, los índices que permanecen en la salida determinan la forma del resultado final.
+
+
+La transposición de $A$ se obtiene con la notación \texttt{ij->ji}. Aquí, $i$ representa las filas y $j$ las columnas. Al invertir el orden de los índices, se construye una nueva matriz donde las filas pasan a ser columnas y viceversa. Matemáticamente, esto se expresa como:
+\begin{equation}
+    (A^T)_{ji} = A_{ij}
+\end{equation}
+Esta operación es solo una reorganización de los elementos.
+
+
+La suma total \texttt{ij->} elimina todos los índices, lo que significa que se suman todos los elementos de la matriz. En términos matemáticos:
+\begin{equation}
+    \sum_{i=1}^{N} \sum_{j=1}^{D} A_{ij}
+\end{equation}
+El resultado es un escalar.
+
+
+La Suma por filas \texttt{ij->i} Conserva el índice $i$ y elimina $j$, lo que implica sumar sobre las columnas:
+    \begin{equation}
+        c_i = \sum_{j=1}^{D} A_{ij}
+    \end{equation}
+    El resultado es un vector de tamaño $N$, donde cada entrada representa la suma de una fila.
+
+La Suma por columnas \texttt{ij->j} Conserva el índice $j$ y elimina $i$, por lo que se suman las filas:
+    \begin{equation}
+        c_j = \sum_{i=1}^{N} A_{ij}
+    \end{equation}
+    Esto produce un vector de tamaño $D$ con la suma de cada columna.
+
+
+
+Finalmente, para la multiplicación matricial \texttt{ik,kj->ij} $A$ tiene índices $(i,k)$ y $B$ tiene índices $(k,j)$. El índice $k$ aparece en ambos tensores pero no en la salida, lo que indica que se debe sumar sobre él. Matemáticamente:
+\begin{equation}
+    C_{ij} = \sum_{k=1}^{D} A_{ik} B_{kj}
+\end{equation}
+El resultado es una matriz $C \in \mathbb{R}^{N \times M}$. 
 
 \subsection*{Task 09: Advanced Einsum (Batch MatMul)}
 
