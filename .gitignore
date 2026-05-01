@@ -229,3 +229,4 @@ __marimo__/
 # Archivos temporales de editores LaTeX
 *.backup
 *~
+.Rhistory
