@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}
+﻿\documentclass[12pt]{article}
 
 \usepackage[spanish]{babel}
 \usepackage[utf8]{inputenc}
@@ -151,8 +151,6 @@ $a \cdot b = \|a\| \, \|b\| \cos(\theta)$
 
 Por otro lado el producto vectorial entre dos vectores genera otro vector perpendicular a los dos vectores originales. Esto solo se define en tres dimensiones y se calcula como:
 
-$
-
 \[
 \vec{a} \times \vec{b} =
 \begin{vmatrix}
@@ -161,9 +159,6 @@ a_1 & a_2 & a_3 \\
 b_1 & b_2 & b_3
 \end{vmatrix}
 \]
-
-
-$
 
 \subsection*{Task 08: Einstein Summation (einsum) Basics}
 La función \text{einsum\_ops(A, B)} toma dos matrices $A \in \mathbb{R}^{N \times D}$ y $B \in \mathbb{R}^{D \times M}$, y utiliza la función (\text{np.einsum}) para realizar cinco operaciones fundamentales: transposición, suma total, suma por filas, suma por columnas y multiplicación matricial. Todas estas operaciones se describen mediante índices.
@@ -208,7 +203,6 @@ $$
 El resultado es una matriz $C \in \mathbb{R}^{N \times M}$. 
 
 \subsection*{Task 09: Advanced Einsum (Batch MatMul)}
-\section{Explicación del mecanismo de atención}
 
 En esta función usamos herramientas de álgebra lineal, principalmente el \textbf{producto escalar} para medir similitud entre vectores:
 
@@ -334,7 +328,5 @@ m+\log\left(\sum_{j=1}^{D} e^{x_j-m}\right)
 La idea es que la suma de exponenciales puede reescribirse factorizando el valor máximo de los exponentes. Al hacer esto, se extrae ese máximo fuera de la suma y se convierte en un término separado. Luego, usando la propiedad del logaritmo de que el logaritmo de un producto es igual a la suma de los logaritmos, se separa la expresión en dos partes: el máximo y el logaritmo de una suma de exponentes ajustados.
 Donde denotamos m como el max de los exponentes de todas las exponenciales, así si restamos este a todas las otras, su mayor valor puede ser 1 aprovechando las propiedades que tenemos sobre $e$ cuando tiende a -infinito. Se utiliza N como cantidad de filas y D cantidad de valores por fila, el procedimiento para realizar este truco es encontrar el max de cada fila, restarlo para ajustar los exponentes de la e, aplicar exponencial y sumar por fila, aplicamos el logaritmo y sumamos nuevamente el máximo encontrado. El resultado final es un vector de tamaño (N, ) con el log-sum-exp de cada fila.
 
-% -------------------------
-\section*{Conclusiones}
 
 \end{document}
