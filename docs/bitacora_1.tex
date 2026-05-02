@@ -1,4 +1,4 @@
-﻿\documentclass[12pt]{article}
+\documentclass[12pt]{article}
 
 \usepackage[spanish]{babel}
 \usepackage[utf8]{inputenc}
@@ -106,6 +106,12 @@ Esto asegura que la operación siempre esté bien definida. Aunque introduce un 
 
 
 \subsection*{Task 04: Tensor Reshaping \& Transposing}
+En este ejercicio lo que nos piden es tomar un vector de una dimensión de tamaño BxCxHxW.
+Primero debemos convertirlo en un vector de 4 dimensiones. Con el reshape lo que hacemos es convertir el vector de una dimensión en una de 4 dimensiones sin afectar a los datos que nos dan.
+Luego debemos transponerlo para reorganizar las dimensiones para formar el orden del otro arreglo que nos piden.
+Esto nos sirve porque según las operaciones y marcos que debemos hacer nos es más eficiente el NCHW o el NHWC.
+En la parte de la teoría de los tensores, estos son matrices multidimensionales con un tipo uniforme. Entonces, por esto trabajamos con operaciones dirigidas a matrices como lo es la transposición. En este caso específico el reshaping y el transposing se utilizan principalmente para reorganizar la estructura de los datos multidimensionales sin alterar los valores numéricos subyacentes, permitiendo que sean compatibles con diferentes operaciones matemáticas o capas de una red neuronal. 
+
 
 \subsection*{Task 05: Reduction Operations}
 Las operaciones de reducción son funciones que toman un tensor de gran dimensión
@@ -137,7 +143,27 @@ estuvo la red), se agrega un término extra basado en la norma de los pesos que 
 obligando a la red a mantener pesos pequeños mientras minimiza el error. \\
 La segunda es el gradient clipping, donde se calcula la norma L2 de los ajustes que se le van a aplicar a los pesos y si se supera un umbral se reducen proporcionalmente antes de
  aplicarlos, evitando que el entrenamiento se desestabilice por actualizaciones demasiado grandes. 
+
 \subsection*{Task 07: Dot Product \& Cross Product}
+En este ejercicio utilizamos conceptos básicos de álgebra lineal como lo son el producto escalar y el producto vectorial.
+El producto escalar entre dos vectores tiene como resultado un número real. Este valor mide, en cierta forma, cuánto de un vector se proyecta en la dirección del otro. 
+$a \cdot b = \|a\| \, \|b\| \cos(\theta)$
+
+Por otro lado el producto vectorial entre dos vectores genera otro vector perpendicular a los dos vectores originales. Esto solo se define en tres dimensiones y se calcula como:
+
+$
+
+\[
+\vec{a} \times \vec{b} =
+\begin{vmatrix}
+\vec{i} & \vec{j} & \vec{k} \\
+a_1 & a_2 & a_3 \\
+b_1 & b_2 & b_3
+\end{vmatrix}
+\]
+
+
+$
 
 \subsection*{Task 08: Einstein Summation (einsum) Basics}
 La función \text{einsum\_ops(A, B)} toma dos matrices $A \in \mathbb{R}^{N \times D}$ y $B \in \mathbb{R}^{D \times M}$, y utiliza la función (\text{np.einsum}) para realizar cinco operaciones fundamentales: transposición, suma total, suma por filas, suma por columnas y multiplicación matricial. Todas estas operaciones se describen mediante índices.
@@ -182,6 +208,23 @@ $$
 El resultado es una matriz $C \in \mathbb{R}^{N \times M}$. 
 
 \subsection*{Task 09: Advanced Einsum (Batch MatMul)}
+\section{Explicación del mecanismo de atención}
+
+En esta función usamos herramientas de álgebra lineal, principalmente el \textbf{producto escalar} para medir similitud entre vectores:
+
+
+\[
+a \cdot b = \|a\| \, \|b\| \cos(\theta)
+\]
+
+
+Donde el producto escalar mide la similitud entre dos vectores en función del ángulo que forman.
+
+Sea $Q$ lo que buscamos (queries) y $K$ lo que tenemos (keys). Al calcular $QK^{\top}$, obtenemos una matriz de similitudes entre cada query y cada key. Luego se divide por $\sqrt{D}$ para normalizar. Después se aplica \texttt{softmax}, que convierte esas similitudes en \textbf{pesos de atención}, es decir, probabilidades que indican cuánto debe atender cada $Q$ a cada $K$.
+
+Finalmente, esos pesos se usan para combinar los valores $V$ en una mezcla ponderada de la información. Todo esto se hace en paralelo para todos los lotes ($B$) y cabezas ($H$), lo que permite que el modelo sea multifuncional y atienda a diferentes aspectos de la secuencia simultáneamente.
+
+
 
 \subsection*{Task 10: Gradient of Sum}
 Este ejercicio trata de que una suma se basa en el principio de 
