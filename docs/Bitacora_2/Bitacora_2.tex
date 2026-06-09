@@ -1,0 +1,85 @@
+\documentclass[12pt]{article}
+
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{array}
+
+\geometry{margin=2.5cm}
+\begin{document}
+\begin{titlepage}
+\centering
+
+\vspace*{\fill}
+{\Large \textbf{Proyecto CA0305}} \\
+{\large Bitácora 1} \\
+\vspace{2cm}
+{\large \textbf{Integrantes}} \\
+\vspace{1cm}
+\begin{tabular}{p{6cm} p{2cm}}
+Ashly Garro Villanueva & C33198 \\
+Robert Meléndez Jiménez & C34772 \\
+Adriana Monge Rodríguez & C35042 \\
+Emily Sánchez Mancía & C27260 \\
+Alessandro Umaña Vega & C37963 \\
+\end{tabular}
+
+\vspace{2cm}
+
+{\large \textbf{I Ciclo 2026}}
+\vspace*{\fill}
+
+\end{titlepage}
+
+\newpage
+
+% -------------------------
+\section*{Fundamentación Matemática}
+\subsection*{Task 02: Linear Layer Backward}
+
+\subsection*{Task 10: Weight Initialization (Xavier/Glorot)}
+La inicialización Xavier surge del problema de la propagación de señales en redes neuronales profundas. 
+Cuando una red tiene muchas capas, los valores que se transmiten entre ellas pueden hacerse cada vez más 
+pequeños o cada vez más grandes. Esto provoca dos fenómenos conocidos como desvanecimiento de gradientes 
+(vanishing gradients) y explosión de gradientes (exploding gradients), los cuales dificultan o incluso impiden 
+el entrenamiento de la red.
+
+Considere una capa lineal definida por $y = Wx+b$ donde x representa las entradas, W la matriz de pesos y b el vector 
+de sesgos. El objetivo es elegir valores iniciales para W de forma que la variabilidad de las activaciones se mantenga 
+aproximadamente constante al atravesar las capas.
+
+Si asumimos que las entradas son independientes y tienen varianza $var(x)$, la varianza de la salida $y$ puede aproximarse por:
+$$var(y) \approx fan_{in} \cdot var(W)var(x)$$ donde $fan_{in}$ es la cantidad de conexiones de cada neurona. Esto nos muestra que la 
+varianza de la salida depende directamente del número de entradas y de la varianza de los pesos.
+
+Para que la señal conserve aproximadamente la misma magnitud al pasar de una capa a otra, se busca que $var(y) \approx var(x)$, esto implica
+que $fan_{in} \cdot var(W) = 1$. De esta manera, la varianza de los pesos debe ser inversamente proporcional al número de entradas.
+Xavier propone inicializar los pesos mediante una distribución uniforme simétrica alrededor de cero. Si los pesos se distribuyen como U(-a,a), la varianza de dicha distribución es 
+$$var(W) = \frac{a^2}{3}$$
+
+Sin embargo, no solo es importante que la información que 
+entra a la red mantenga una magnitud estable mientras avanza 
+desde la capa de entrada hasta la capa de salida (propagación 
+hacia adelante o forward pass). Durante el entrenamiento 
+también se envían señales de error en sentido contrario, 
+desde la salida hacia las capas anteriores, para actualizar 
+los pesos (retropropagación o backpropagation). Si estas 
+señales de error se vuelven demasiado grandes o demasiado 
+pequeñas, el aprendizaje se vuelve inestable. Por esta 
+razón, Xavier no considera únicamente el número de 
+conexiones de entrada $(fan_{in})$, sino también el 
+número de conexiones de salida $(fan_{out})$, buscando 
+equilibrar tanto el flujo de información durante la 
+propagación hacia adelante como el flujo de gradientes 
+durante la retropropagación.
+
+Al combinar ambos efectos, se obtiene el límite
+$$a = \sqrt{\frac{6}{fa_{in}+fan_{out}}}$$
+por lo que los pesos se generan tales que
+$$W \sim U(-\sqrt{\frac{6}{fa_{in}+fan_{out}}}, \sqrt{\frac{6}{fa_{in}+fan_{out}}})$$
+La idea central es que los pesos no sean ni demasiado grandes ni demasiado pequeños. Si fueran muy pequeños, las activaciones y los gradientes tenderían a desaparecer; si fueran muy grandes, crecerían excesivamente y provocarían inestabilidad numérica. Xavier Initialization encuentra un equilibrio que permite mantener una varianza relativamente constante tanto en la propagación hacia adelante como en la propagación hacia atrás.
+
+Por esta razón, esta técnica funciona especialmente bien en redes que utilizan funciones de activación como sigmoid o tanh, ya que estas funciones son simétricas alrededor de cero y se benefician de una distribución equilibrada de las activaciones. Gracias a ello, el entrenamiento resulta más estable y la convergencia suele ser más rápida.
+\end{document}
