@@ -44,6 +44,13 @@ Alessandro Umaña Vega & C37963 \\
 % -------------------------
 \section{Fundamentación Matemática}
 \subsection{Linear Layer Forward}
+Para iniciar se define una capa lineal, la cual esta formada por la matriz W, donde cada entrada se le asocia un peso, la matriz X, 
+la matriz con los datos de la entradas y b un sesgo general. Este procedimiento permite hacer transformaciones iniciales importantes 
+de la forma 
+$$
+Y = WX + b
+$$
+Donde la multiplciación entre W y X es de forma matricial.
 
 \subsection{Linear Layer Backward}
 Durante el entrenamiento de una red neuronal, el algoritmo de retropropagación (\textit{backpropagation}) 
