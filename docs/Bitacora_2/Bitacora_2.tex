@@ -239,6 +239,44 @@ las probabilidades predichas se les resta la matriz real codificada en one-hot.
 
 
 \subsection{SGD Optimizer}
+El descenso por gradiente (o SGD por sus siglas en inglés) es uno de los métodos de optimización 
+más usados en el entrenamiento de redes neuronales. De acuerdo con \textcite{Goodfellow2016}, el 
+objetivo del aprendizaje es minimizar una función de pérdida $L$, la cual mide la diferencia entre
+las predicciones del modelo y los valores reales observados.
+
+Para lograr esta minimización, se calcula el gradiente de la función de pérdida con respecto a cada
+parámetro de la red mediante el algoritmo de retropropagación. Este gradiente se calcula como
+$$dw = \frac{\partial L}{\partial w}$$
+donde $w$ es el peso o parámetro del modelo. El gradiente indica la dirección de mayor incremento de la 
+función de pérdida. Por lo tanto, para reducir el error, es necesario modificar los parámetros en la
+dirección opuesta al gradiente.
+
+La regla de actualización utilizada por SGD está dada por
+
+$$w_{t+1}=w_t-\eta \nabla L(w_t)$$
+
+donde $w_t$ representa el valor actual del parámetro, $\nabla L(w_t)$ es el gradiente de la función de pérdida y $\eta$
+corresponde a la tasa de aprendizaje (\textit{learning rate}).
+
+En la implementación, el gradiente calculado durante la retropropagación se almacena en la variable $dw$, 
+mientras que la tasa de aprendizaje se representa mediante $lr$. De esta forma, la actualización de los 
+parámetros puede escribirse como
+
+$$w_{\text{nuevo}} = w - lr \cdot dw$$
+
+La variable $dw$ contiene información sobre cuánto cambia la función de pérdida cuando se modifica cada elemento de $w$. 
+Si un componente de $dw$ es positivo, significa que aumentar dicho peso incrementaría el error, por lo que SGD reduce su 
+valor. En cambio, si el gradiente es negativo, el algoritmo aumenta el peso correspondiente para disminuir la pérdida.
+
+Según \textcite{Goodfellow2016}, la tasa de aprendizaje controla el tamaño de cada actualización. 
+Valores demasiado grandes pueden provocar divergencia durante el entrenamiento, mientras 
+que valores demasiado pequeños producen una convergencia lenta. Por esta razón, la elección adecuada de $lr$ 
+es importante para un correcto funcionamiento del algoritmo.
+
+La actualización se realiza de elemento a elemento sobre los tensores de parámetros, 
+permitiendo trabajar con escalares, vectores, matrices o tensores de mayor dimensión mediante operaciones 
+vectorizadas. Como resultado, se obtiene un nuevo conjunto de parámetros que busca reducir el valor de la 
+función de pérdida y mejorar de manera progresiva el funcionamiento de la red neuronal.
 \subsection{Momentum Optimizer}
 
 \subsection{RMSProp Optimizer}
