@@ -372,7 +372,15 @@ permitiendo trabajar con escalares, vectores, matrices o tensores de mayor dimen
 vectorizadas. Como resultado, se obtiene un nuevo conjunto de parámetros cuyo objetivo es reducir el valor de la 
 función de pérdida y mejorar de manera progresiva el funcionamiento de la red neuronal.
 \subsection{Momentum Optimizer}
-
+ El optimizador del momentum explica \textcite{Goodfellow2016} se introduce una variable $v$ que indica la velocidad, 
+ la cual es la dirección y velocidad en la que el parametro se va a mover dentro del espacio de él mismo. Esta tiene una tendendencia exponencial 
+ decreciente del gradiente negativo y se calcula de la siguiente forma
+ $
+ V_new=\beta*v+dw
+ $
+ $
+ w_new=w-lr*v_new
+ $
 \subsection{RMSProp Optimizer}
 
 RMSProp es un método de optimización que ajusta la tasa de aprendizaje de forma adaptativa. Esto significa que no 
