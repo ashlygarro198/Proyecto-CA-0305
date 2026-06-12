@@ -52,7 +52,77 @@ Alessandro Umaña Vega & C37963 \\
 \subsection{ReLU Activation Backward}
 
 \subsection{Sigmoid Activation}
+La función de activación sigmoide es una de las funciones más utilizadas en aprendizaje 
+automático ya a que transforma cualquier número real en un valor entre 0 y 1. Matemáticamente se define como
 
+$$
+\sigma(x)=\frac{1}{1+e^{-x}}.
+$$
+
+Según \textcite{Goodfellow2016}, esta función se utiliza frecuentemente para modelar 
+probabilidades, ya que sus salidas coinciden con el rango válido de parámetros 
+de una distribución Bernoulli. Debido a esto, es común utilizarla en la capa de salida de problemas de 
+clasificación binaria.
+
+Durante la propagación hacia adelante (\textit{forward pass}), cada elemento de la entrada $x$
+es transformado mediante la función sigmoide para obtener la salida
+
+$$
+out=\sigma(x).
+$$
+
+Cuando los valores de entrada son muy negativos, la salida se aproxima a 0, cuando son muy positivos, 
+la salida se aproxima a 1, y para $x=0$, la salida toma el valor de 0.5. Debido a que el cálculo de exponenciales 
+puede generar problemas numéricos para valores extremos de $x$, es común utilizar implementaciones numéricamente 
+estables que emplean expresiones equivalentes según el signo de la entrada, como
+
+$$
+\sigma(x)=\frac{e^x}{1+e^{x}}.
+$$
+
+Una propiedad importante de la función sigmoide es que su derivada puede expresarse 
+utilizando únicamente el valor obtenido en la propagación hacia adelante:
+
+$$
+\sigma'(x)=\sigma(x)(1-\sigma(x)).
+$$
+
+Esta característica permite implementar de manera correcta la retropropagación (\textit{backpropagation}), 
+ya que no es necesario recalcular exponenciales para obtener la derivada.
+
+Durante la retropropagación se recibe un gradiente obtenido de las capas posteriores de la red, 
+denominado \textit{upstream gradient} y representado por $dout$. Este valor corresponde a la derivada de 
+la función de pérdida respecto a la salida de la función sigmoide, es decir,
+
+$$
+dout=\frac{\partial L}{\partial out},
+$$
+
+donde $L$ representa la función de pérdida.
+
+Aplicando la regla de la cadena, el gradiente respecto a la entrada se calcula como
+
+$$
+\frac{\partial L}{\partial x}
+$$
+
+$$
+=\frac{\partial L}{\partial out} \frac{\partial out}{\partial x}
+$$
+
+$$=dout \cdot \sigma(x)(1-\sigma(x)).$$
+
+Por lo tanto, el gradiente de salida de la operación se obtiene multiplicando el 
+gradiente recibido desde la capa siguiente por la derivada local de la función sigmoide.
+
+Sin embargo, \textcite{GLOROT2010} señalan que la función sigmoide presenta una 
+limitación importante conocida como saturación. Cuando las entradas toman valores muy 
+grandes o muy pequeños, la salida de la función se aproxima a 1 o 0 y su derivada tiende a cero. 
+Como consecuencia, los gradientes que se propagan hacia las capas anteriores pueden volverse extremadamente 
+pequeños, produciendo el fenómeno conocido como desvanecimiento de gradientes (\textit{vanishing gradients}). 
+Este problema dificulta el entrenamiento de redes neuronales profundas y motivó el desarrollo de técnicas de 
+inicialización, como Xavier Initialization, que buscan mantener estable la magnitud de las activaciones y 
+los gradientes a través de las capas de la red.
 \subsection{Tanh Activation}
 
 \subsection{MSE Loss Forward \& Backward}
