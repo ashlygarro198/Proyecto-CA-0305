@@ -124,7 +124,7 @@ La idea clave es que el gradiente es proporcional al error: cuando el error es m
 
 \subsection{Binary Cross Entropy Loss}
 
-\subsection{MSE Loss Forward \& Backward}
+\subsection{Categorical Cross Entropy Backward}
 En este ejercicio se crea una función llamada categorical\_ce\_backward, la cual recibe como parámetros probs y targets. La variable probs contiene las probabilidades generadas por la función softmax para cada muestra y cada clase, mientras que targets contiene la clase correcta de cada muestra. 
 Entonces, ambos valores se convierten en arreglos de NumPy para poder trabajar con ellos de forma vectorizada. Luego, se obtiene N usando probs.shape[0], ya que N representa la cantidad de filas, es decir, la cantidad de muestras. 
 Después, se crea una copia de probs llamada dx, para no modificar los datos originales. Como el gradiente de softmax combinado con entropía cruzada se simplifica a probs y\_true lo que se hace es restar 1 en la posición correspondiente a la clase correcta de cada fila. Esto se logra con $dx[np.arange(N), targets] -= 1$. 
@@ -167,6 +167,48 @@ $$
 La idea clave es que la derivación completa de Softmax + Cross Entropy se reduce a una forma muy simple: a 
 las probabilidades predichas se les resta la matriz real codificada en one-hot.
 
+
+\subsection{SGD Optimizer}
+\subsection{Momentum Optimizer}
+
+\subsection{RMSProp Optimizer}
+
+Este ejercicio trata sobre implementar la función rmsprop\_step(w, dw, lr, decay, eps, cache), la cual se utiliza para actualizar los pesos de un modelo mediante el optimizador RMSProp.
+
+RMSProp es un método de optimización que ajusta la tasa de aprendizaje de forma adaptativa. Esto significa que no actualiza todos los pesos de la misma manera, sino que toma en cuenta el comportamiento reciente del gradiente para hacer actualizaciones más estables.
+
+El primer paso consiste en actualizar el caché:
+
+$$
+s_{\text{nuevo}} = \beta \cdot s + (1 - \beta) \cdot dw^2
+$$
+
+En esta fórmula, (s) representa el caché anterior, (dw) es el gradiente actual y $(\beta)$, también llamado decay, controla cuánta memoria se conserva de los gradientes anteriores. Este caché funciona como un promedio móvil de los gradientes al cuadrado.
+
+Luego, se calcula una tasa de aprendizaje adaptativa:
+
+$$
+\text{aprendizaje adaptativo} =
+\frac{lr}{\sqrt{s_{\text{nuevo}}} + \epsilon}
+$$
+
+Aquí, (lr) representa la tasa de aprendizaje original y $(\epsilon)$ es un valor muy pequeño que se utiliza para evitar divisiones entre cero. La raíz cuadrada del caché permite ajustar el tamaño del paso dependiendo de qué tan grandes han sido los gradientes.
+
+Después, se actualizan los pesos:
+
+$$
+w_{\text{nuevo}} = w - \text{aprendizaje adaptativo} \cdot dw
+$$
+
+Esto significa que los pesos se mueven en la dirección contraria al gradiente, ya que el objetivo es reducir la pérdida del modelo.
+
+La función finalmente retorna dos valores: los pesos actualizados $(w_{\text{nuevo}})$ y el nuevo caché $(s_{\text{nuevo}})$. Este nuevo caché se debe guardar porque será utilizado en la siguiente iteración, por eso RMSProp es un proceso iterativo.
+
+La tasa de decaimiento b controla la memoria del algoritmo. Si b = 0, solo se toma en cuenta el gradiente actual. Si b = 0.9, se conserva el 90\% del caché anterior, que suele ser un valor común. Si b = 0.99, el algoritmo conserva más memoria, por lo que la adaptación es más lenta pero más estable.
+
+En resumen, RMSProp ayuda a que el entrenamiento sea más estable porque divide el gradiente entre una medida acumulada de los gradientes recientes. De esta forma, evita actualizaciones demasiado grandes cuando los gradientes son altos y permite un mejor control del aprendizaje.
+
+\subsection{Adam Optimizer}
 
 \subsection{Weight Initialization (Xavier/Glorot)}
 La inicialización Xavier fue propuesta por \textcite{GLOROT2010} para 
@@ -224,55 +266,11 @@ estable de las activaciones y de los gradientes a través de las capas
 de la red. De esta forma, se reduce el riesgo de desvanecimiento o 
 explosión de gradientes, permitiendo un entrenamiento más estable y eficiente.
 
-\subsection{Momentum Optimizer}
-
-\subsection{MSE Loss Forward \& Backward}
-
-
-Este ejercicio trata sobre implementar la función rmsprop\_step(w, dw, lr, decay, eps, cache), la cual se utiliza para actualizar los pesos de un modelo mediante el optimizador RMSProp.
-
-RMSProp es un método de optimización que ajusta la tasa de aprendizaje de forma adaptativa. Esto significa que no actualiza todos los pesos de la misma manera, sino que toma en cuenta el comportamiento reciente del gradiente para hacer actualizaciones más estables.
-
-El primer paso consiste en actualizar el caché:
-
-$$
-s_{\text{nuevo}} = \beta \cdot s + (1 - \beta) \cdot dw^2
-$$
-
-En esta fórmula, (s) representa el caché anterior, (dw) es el gradiente actual y $(\beta)$, también llamado decay, controla cuánta memoria se conserva de los gradientes anteriores. Este caché funciona como un promedio móvil de los gradientes al cuadrado.
-
-Luego, se calcula una tasa de aprendizaje adaptativa:
-
-$$
-\text{aprendizaje adaptativo} =
-\frac{lr}{\sqrt{s_{\text{nuevo}}} + \epsilon}
-$$
-
-Aquí, (lr) representa la tasa de aprendizaje original y $(\epsilon)$ es un valor muy pequeño que se utiliza para evitar divisiones entre cero. La raíz cuadrada del caché permite ajustar el tamaño del paso dependiendo de qué tan grandes han sido los gradientes.
-
-Después, se actualizan los pesos:
-
-$$
-w_{\text{nuevo}} = w - \text{aprendizaje adaptativo} \cdot dw
-$$
-
-Esto significa que los pesos se mueven en la dirección contraria al gradiente, ya que el objetivo es reducir la pérdida del modelo.
-
-La función finalmente retorna dos valores: los pesos actualizados $(w_{\text{nuevo}})$ y el nuevo caché $(s_{\text{nuevo}})$. Este nuevo caché se debe guardar porque será utilizado en la siguiente iteración, por eso RMSProp es un proceso iterativo.
-
-La tasa de decaimiento b controla la memoria del algoritmo. Si b = 0, solo se toma en cuenta el gradiente actual. Si b = 0.9, se conserva el 90\% del caché anterior, que suele ser un valor común. Si b = 0.99, el algoritmo conserva más memoria, por lo que la adaptación es más lenta pero más estable.
-
-En resumen, RMSProp ayuda a que el entrenamiento sea más estable porque divide el gradiente entre una medida acumulada de los gradientes recientes. De esta forma, evita actualizaciones demasiado grandes cuando los gradientes son altos y permite un mejor control del aprendizaje.
-
-\subsection{Adam Optimizer}
-
-\subsection{Weight Initialization (Xavier/Glorot)}
-
 \subsection{Weight Initialization (Kaiming/He)}
 
 \subsection{Dropout Forward}
 
-\subsection{MSE Loss Forward \& Backward}
+\subsection{Dopout Backward}
 
 El fin de este ejercicio es crear la funcion dropout\_backward(dout, mask, p, train = True), que es la que calcula el gradiente, hay 2 casos si se encuentra en entrenamiento o no. Matemáticamente, durante el entrenamiento se utiliza una máscara binaria (m), donde cada valor puede ser 0 o 1. Si m = 0, la neurona se apaga y no participa en el cálculo; si m = 1, la neurona permanece activa.
 
