@@ -46,7 +46,74 @@ Alessandro Umaña Vega & C37963 \\
 \subsection{Linear Layer Forward}
 
 \subsection{Linear Layer Backward}
+Durante el entrenamiento de una red neuronal, el algoritmo de retropropagación (\textit{backpropagation}) 
+calcula cómo cambia la función de pérdida con respecto a las variables y parámetros del modelo mediante 
+aplicaciones sucesivas de la regla de la cadena. Según \textcite{Goodfellow2016}, este procedimiento 
+permite propagar información sobre el error desde la salida de la red hacia las capas anteriores, 
+obteniendo los gradientes necesarios para actualizar los parámetros durante el proceso de optimización.
 
+Considere una capa lineal definida por
+
+$$
+Y = XW + b,
+$$
+
+donde $X$ representa la matriz de entradas, $W$ la matriz de pesos y $b$ el vector de sesgos. 
+Durante la propagación hacia adelante, esta transformación combina linealmente las características de 
+entrada para producir la salida de la capa.
+
+En la etapa de retropropagación se recibe un gradiente proveniente de la siguiente capa, 
+denominado \textit{upstream gradient} y representado por $dout$. 
+Este gradiente es a la derivada de la función de pérdida con respecto a la salida de la capa:
+
+$$
+dout=\frac{\partial L}{\partial Y}.
+$$
+
+Cada elemento de $dout$ indica la sensibilidad de la función de pérdida ante cambios en 
+la salida correspondiente de la capa lineal. Aplicando la regla de la cadena descrita por \textcite{Goodfellow2016} 
+a la transformación $Y=XW+b$, es posible obtener los gradientes respecto a las entradas, los pesos y los sesgos.
+
+El gradiente respecto a la entrada se calcula mediante
+
+$$
+dx=\frac{\partial L}{\partial X}
+=
+dout\,W^{T}.
+$$
+
+Este resultado tiene las mismas dimensiones que la matriz de entrada y permite continuar la propagación del e
+rror hacia las capas anteriores de la red.
+
+Por otra parte, el gradiente respecto a los pesos se obtiene como
+
+$$
+dw=\frac{\partial L}{\partial W}
+=
+X^{T}dout.
+$$
+
+Este gradiente cuantifica cuánto contribuye cada peso al error total del modelo y es la información utilizada 
+más adelante por los algoritmos de optimización para actualizar los parámetros.
+
+Por último, el gradiente respecto al vector de sesgos se obtiene sumando las contribuciones de todas las observaciones 
+consideradas en la entrada:
+
+$$
+db=\frac{\partial L}{\partial b}
+=
+\sum_{i=1}^{N}\frac{\partial L}{\partial Y_i}.
+$$
+
+En la implementación, esta operación equivale a sumar los valores de $dout$ a lo largo de la dimensión 
+correspondiente a las observaciones. Esto ocurre porque cada componente del sesgo afecta de igual forma
+a todas las observaciones procesadas.
+
+Debido a esto, la retropropagación de una capa lineal genera tres gradientes principales, $dx$, que permite continuar 
+el flujo de gradientes hacia capas anteriores, $dw$, que mide la sensibilidad de la pérdida respecto a los pesos,
+ y $db$, que cuantifica la influencia de los sesgos sobre el error. 
+ Estos gradientes son utilizados más adelante por algoritmos de optimización, como el descenso por gradiente estocástico (SGD), 
+ para actualizar los parámetros y mejorar progresivamente el desempeño de la red neuronal \parencite{Goodfellow2016}.
 \subsection{ReLU Activation Forward}
 
 \subsection{ReLU Activation Backward}
@@ -127,13 +194,19 @@ los gradientes a través de las capas de la red.
 
 \subsection{MSE Loss Forward \& Backward}
 
-Lo que hacemos en este ejercicio es crear una función que recibe como parámetros los valores de nuestra predicción y los valores reales que debieron obtenerse. Primero, se comparan ambos valores y se calcula la diferencia entre ellos, la cual representa el error. Para evitar que el error sea negativo y para penalizar más los errores grandes, este error se eleva al cuadrado.
+Para el ejercicio \textit{MSE Loss Forward \& Backward}, se crea una función que recibe como parámetros los valores de 
+nuestra predicción y los valores reales que debieron obtenerse. Primero, se comparan ambos valores y se calcula la 
+diferencia entre ellos, la cual representa el error. Para evitar que el error sea negativo y para penalizar más los 
+errores grandes, este error se eleva al cuadrado.
 
-Como queremos obtener el promedio del error cuadrático, se utiliza `.mean()` para calcular la pérdida, también llamada `loss`.
+Como queremos obtener el promedio del error cuadrático, se utiliza '.mean()' para calcular la pérdida, también llamada 'loss'.
 
-MSE, por sus siglas en inglés *Mean Squared Error*, es una de las funciones de pérdida más utilizadas en machine learning. Esta función mide la diferencia entre las predicciones y los valores reales, y es especialmente útil porque castiga con mayor fuerza los errores grandes en comparación con los errores pequeños.
+El MSE (por sus siglas en inglés Mean Squared Error), es una de las funciones de pérdida más utilizadas en machine learning. 
+Esta función mide la diferencia entre las predicciones y los valores reales, y es especialmente útil porque castiga con 
+mayor fuerza los errores grandes en comparación con los errores pequeños.
 
-También es importante calcular el gradiente, ya que este indica cómo cambia la pérdida con respecto a cada valor predicho. La fórmula de la pérdida MSE es:
+También es importante calcular el gradiente, ya que este indica cómo cambia la pérdida con respecto a cada valor predicho. 
+La fórmula de la pérdida MSE es:
 
 $$
 L = \frac{1}{N \cdot D} \sum_{k,l} \left( y_{\text{pred},kl} - y_{\text{true},kl} \right)^2
@@ -176,7 +249,8 @@ y_{\text{pred},ij} - y_{\text{true},ij}
 \right)
 $$
 
-El número 2 aparece porque al derivar un término elevado al cuadrado, baja el exponente. Además, el factor $(\frac{1}{N \cdot D})$ normaliza el resultado según la cantidad total de elementos.
+El número 2 aparece porque al derivar un término elevado al cuadrado, baja el exponente. Además, 
+el factor $(\frac{1}{N \cdot D})$ normaliza el resultado según la cantidad total de elementos.
 
 En Python, esto se representa calculando primero el error:
 
@@ -190,25 +264,37 @@ Y el gradiente se calcula aplicando la fórmula:
 
 dx = (2 / error.size) * error
 
-La idea clave es que el gradiente es proporcional al error: cuando el error es mayor, el gradiente también será mayor. Esto permite saber cuánto debe ajustarse la predicción para reducir la pérdida. Sin embargo, en los métodos de optimización, se avanza en la dirección contraria al gradiente, porque el gradiente señala hacia dónde aumenta la pérdida.
+La idea clave es que el gradiente es proporcional al error: cuando el error es mayor, el gradiente también será mayor. 
+Esto permite saber cuánto debe ajustarse la predicción para reducir la pérdida. Sin embargo, en los métodos de optimización, 
+se avanza en la dirección contraria al gradiente, porque el gradiente señala hacia dónde aumenta la pérdida.
 
 \subsection{Binary Cross Entropy Loss}
 
 \subsection{Categorical Cross Entropy Backward}
-En este ejercicio se crea una función llamada categorical\_ce\_backward, la cual recibe como parámetros probs y targets. La variable probs contiene las probabilidades generadas por la función softmax para cada muestra y cada clase, mientras que targets contiene la clase correcta de cada muestra. 
-Entonces, ambos valores se convierten en arreglos de NumPy para poder trabajar con ellos de forma vectorizada. Luego, se obtiene N usando probs.shape[0], ya que N representa la cantidad de filas, es decir, la cantidad de muestras. 
-Después, se crea una copia de probs llamada dx, para no modificar los datos originales. Como el gradiente de softmax combinado con entropía cruzada se simplifica a probs y\_true lo que se hace es restar 1 en la posición correspondiente a la clase correcta de cada fila. Esto se logra con $dx[np.arange(N), targets] -= 1$. 
-Como ultimo, se divide dx entre N porque el ejercicio pide obtener el gradiente promedio. La función devuelve dx, que representa el gradiente con respecto a los logits. 
+La función categorical\_ce\_backward, recibe como parámetros $probs$ y $targets$. La variable $probs$
+ contiene las probabilidades generadas por la función $softmax$ para cada muestra y cada clase, mientras que $targets$ 
+ contiene la clase correcta de cada muestra. 
+Entonces, ambos valores se convierten en arreglos de NumPy para poder trabajar con ellos de forma vectorizada. 
+Luego, se obtiene N usando probs.shape[0], ya que N representa la cantidad de filas, es decir, la cantidad de muestras. 
+Después, se crea una copia de probs llamada dx, para no modificar los datos originales. Como el gradiente de softmax combinado 
+con entropía cruzada se simplifica a probs y\_true lo que se hace es restar 1 en la posición correspondiente a la clase 
+correcta de cada fila. Esto se logra con $dx[np.arange(N), targets] -= 1$. 
+Como ultimo, se divide dx entre N porque el ejercicio pide obtener el gradiente promedio. La función devuelve dx, que 
+representa el gradiente con respecto a los logits. 
 
-La pérdida utilizada es la combinación de Softmax + Cross Entropy. Primero, la función softmax convierte los logits $(z_{ij})$ en probabilidades $(p_{ij})$, donde cada valor representa la probabilidad de que la observación (i) pertenezca a la clase (j).
+La pérdida utilizada es la combinación de Softmax + Cross Entropy. Primero, la función softmax convierte los 
+logits $(z_{ij})$ en probabilidades $(p_{ij})$, donde cada valor representa la probabilidad de que la observación (i) 
+pertenezca a la clase (j).
 
-La pérdida Cross Entropy toma únicamente la probabilidad de la clase correcta $(p_{i,y_i})$ y calcula su logaritmo negativo. Por eso, la pérdida se escribe como:
+La pérdida Cross Entropy toma únicamente la probabilidad de la clase correcta $(p_{i,y_i})$ y calcula su logaritmo 
+negativo. Por eso, la pérdida se escribe como:
 
 $$
 L = -\frac{1}{N}\sum_{i=1}^{N}\log(p_{i,y_i})
 $$
 
-Al derivar esta pérdida con respecto al logit $(z_{ij})$, se deben considerar las derivadas de softmax y de Cross Entropy. Aunque al inicio aparecen varios términos, incluyendo términos cruzados entre clases, estos se simplifican.
+Al derivar esta pérdida con respecto al logit $(z_{ij})$, se deben considerar las derivadas de softmax y de Cross 
+Entropy. Aunque al inicio aparecen varios términos, incluyendo términos cruzados entre clases, estos se simplifican.
 
 Después de aplicar la regla de la cadena y simplificar, el resultado final queda como:
 
@@ -218,7 +304,8 @@ $$
 
 donde $(y_{ij})$ vale 1 si la clase (j) es la clase correcta, y 0 si no lo es.
 
-En Python, esto se representa copiando la matriz de probabilidades y restando 1 únicamente en la posición de la clase correcta de cada fila:
+En Python, esto se representa copiando la matriz de probabilidades y restando 1 únicamente en la posición de la 
+clase correcta de cada fila:
 
 $$
 dx = probs
@@ -270,20 +357,20 @@ valor. En cambio, si el gradiente es negativo, el algoritmo aumenta el peso corr
 
 Según \textcite{Goodfellow2016}, la tasa de aprendizaje controla el tamaño de cada actualización. 
 Valores demasiado grandes pueden provocar divergencia durante el entrenamiento, mientras 
-que valores demasiado pequeños producen una convergencia lenta. Por esta razón, la elección adecuada de $lr$ 
+que valores demasiado pequeños producen una convergencia lenta. Por esta razón, la correcta elección de $lr$ 
 es importante para un correcto funcionamiento del algoritmo.
 
-La actualización se realiza de elemento a elemento sobre los tensores de parámetros, 
+La actualización se realiza elemento a elemento sobre los tensores de parámetros, 
 permitiendo trabajar con escalares, vectores, matrices o tensores de mayor dimensión mediante operaciones 
-vectorizadas. Como resultado, se obtiene un nuevo conjunto de parámetros que busca reducir el valor de la 
+vectorizadas. Como resultado, se obtiene un nuevo conjunto de parámetros cuyo objetivo es reducir el valor de la 
 función de pérdida y mejorar de manera progresiva el funcionamiento de la red neuronal.
 \subsection{Momentum Optimizer}
 
 \subsection{RMSProp Optimizer}
 
-Este ejercicio trata sobre implementar la función rmsprop\_step(w, dw, lr, decay, eps, cache), la cual se utiliza para actualizar los pesos de un modelo mediante el optimizador RMSProp.
-
-RMSProp es un método de optimización que ajusta la tasa de aprendizaje de forma adaptativa. Esto significa que no actualiza todos los pesos de la misma manera, sino que toma en cuenta el comportamiento reciente del gradiente para hacer actualizaciones más estables.
+RMSProp es un método de optimización que ajusta la tasa de aprendizaje de forma adaptativa. Esto significa que no 
+actualiza todos los pesos de la misma manera, sino que toma en cuenta el comportamiento reciente del gradiente para 
+hacer actualizaciones más estables.
 
 El primer paso consiste en actualizar el caché:
 
@@ -291,7 +378,9 @@ $$
 s_{\text{nuevo}} = \beta \cdot s + (1 - \beta) \cdot dw^2
 $$
 
-En esta fórmula, (s) representa el caché anterior, (dw) es el gradiente actual y $(\beta)$, también llamado decay, controla cuánta memoria se conserva de los gradientes anteriores. Este caché funciona como un promedio móvil de los gradientes al cuadrado.
+En esta fórmula, (s) representa el caché anterior, (dw) es el gradiente actual y $(\beta)$, también llamado decay, 
+controla cuánta memoria se conserva de los gradientes anteriores. Este caché funciona como un promedio móvil de los 
+gradientes al cuadrado.
 
 Luego, se calcula una tasa de aprendizaje adaptativa:
 
@@ -300,7 +389,9 @@ $$
 \frac{lr}{\sqrt{s_{\text{nuevo}}} + \epsilon}
 $$
 
-Aquí, (lr) representa la tasa de aprendizaje original y $(\epsilon)$ es un valor muy pequeño que se utiliza para evitar divisiones entre cero. La raíz cuadrada del caché permite ajustar el tamaño del paso dependiendo de qué tan grandes han sido los gradientes.
+Aquí, (lr) representa la tasa de aprendizaje original y $(\epsilon)$ es un valor muy pequeño que se utiliza para 
+evitar divisiones entre cero. La raíz cuadrada del caché permite ajustar el tamaño del paso dependiendo de qué tan 
+grandes han sido los gradientes.
 
 Después, se actualizan los pesos:
 
@@ -308,13 +399,19 @@ $$
 w_{\text{nuevo}} = w - \text{aprendizaje adaptativo} \cdot dw
 $$
 
-Esto significa que los pesos se mueven en la dirección contraria al gradiente, ya que el objetivo es reducir la pérdida del modelo.
+Esto significa que los pesos se mueven en la dirección contraria al gradiente, ya que el objetivo es reducir la pérdida 
+del modelo.
 
-La función finalmente retorna dos valores: los pesos actualizados $(w_{\text{nuevo}})$ y el nuevo caché $(s_{\text{nuevo}})$. Este nuevo caché se debe guardar porque será utilizado en la siguiente iteración, por eso RMSProp es un proceso iterativo.
+La función finalmente retorna dos valores: los pesos actualizados $(w_{\text{nuevo}})$ y el nuevo caché $(s_{\text{nuevo}})$. 
+Este nuevo caché se debe guardar porque será utilizado en la siguiente iteración, por eso RMSProp es un proceso iterativo.
 
-La tasa de decaimiento b controla la memoria del algoritmo. Si b = 0, solo se toma en cuenta el gradiente actual. Si b = 0.9, se conserva el 90\% del caché anterior, que suele ser un valor común. Si b = 0.99, el algoritmo conserva más memoria, por lo que la adaptación es más lenta pero más estable.
+La tasa de decaimiento b controla la memoria del algoritmo. Si b = 0, solo se toma en cuenta el gradiente actual. Si b = 0.9, 
+se conserva el 90\% del caché anterior, que suele ser un valor común. Si b = 0.99, el algoritmo conserva más memoria, por lo 
+que la adaptación es más lenta pero más estable.
 
-En resumen, RMSProp ayuda a que el entrenamiento sea más estable porque divide el gradiente entre una medida acumulada de los gradientes recientes. De esta forma, evita actualizaciones demasiado grandes cuando los gradientes son altos y permite un mejor control del aprendizaje.
+En resumen, RMSProp ayuda a que el entrenamiento sea más estable porque divide el gradiente entre una medida acumulada de los 
+gradientes recientes. De esta forma, evita actualizaciones demasiado grandes cuando los gradientes son altos y permite un 
+control del aprendizaje.
 
 \subsection{Adam Optimizer}
 
@@ -378,9 +475,12 @@ explosión de gradientes, permitiendo un entrenamiento más estable y eficiente.
 
 \subsection{Dropout Forward}
 
-\subsection{Dopout Backward}
+\subsection{Dropout Backward}
 
-El fin de este ejercicio es crear la funcion dropout\_backward(dout, mask, p, train = True), que es la que calcula el gradiente, hay 2 casos si se encuentra en entrenamiento o no. Matemáticamente, durante el entrenamiento se utiliza una máscara binaria (m), donde cada valor puede ser 0 o 1. Si m = 0, la neurona se apaga y no participa en el cálculo; si m = 1, la neurona permanece activa.
+La funcóin dropout\_backward(dout, mask, p, train = True), calcula el gradiente. Hay 2 casos si se encuentra en 
+entrenamiento o no. Matemáticamente, durante el entrenamiento se utiliza una máscara binaria (m), donde cada 
+valor puede ser 0 o 1. Si m = 0, la neurona se apaga y no participa 
+en el cálculo; si m = 1, la neurona permanece activa.
 
 En el forward pass, usando dropout invertido, la salida se calcula como:
 
@@ -388,7 +488,9 @@ $$
 out = \frac{x \cdot m}{1-p}
 $$
 
-donde (p) representa la probabilidad de apagar una neurona, y (1-p) representa la probabilidad de mantenerla activa. La división entre (1-p) se hace para compensar las neuronas apagadas y mantener estable la escala de los valores durante el entrenamiento.
+donde (p) representa la probabilidad de apagar una neurona, y (1-p) representa la probabilidad de 
+mantenerla activa. La división entre (1-p) se hace para compensar las neuronas apagadas y mantener estable 
+la escala de los valores durante el entrenamiento.
 
 Luego, en el backward pass, se aplica la regla de la cadena. Como:
 
@@ -410,13 +512,17 @@ $$
 
 dx = mask * dout / (1-p)
 
-Si una posición de la máscara vale 0, el gradiente en esa neurona también será 0, porque esa neurona fue apagada. Si la máscara vale 1, el gradiente pasa, pero se escala dividiéndolo entre (1-p).
+Si una posición de la máscara vale 0, el gradiente en esa neurona también será 0, porque esa neurona fue apagada. 
+Si la máscara vale 1, el gradiente pasa, pero se escala dividiéndolo entre (1-p).
 
-Cuando el modelo no está en entrenamiento, no se aplica dropout, porque en evaluación se utilizan todas las neuronas. Por eso, en ese caso el gradiente simplemente se devuelve igual:
+Cuando el modelo no está en entrenamiento, no se aplica dropout, porque en evaluación se utilizan todas las neuronas. 
+Por eso, en ese caso el gradiente simplemente se devuelve igual:
 
 dx = dout
 
-En resumen, la fundamentación matemática del ejercicio se basa en la regla de la cadena. El gradiente que viene de la capa siguiente, (dout), se multiplica por la derivada de la operación dropout. Por eso, durante entrenamiento el gradiente se filtra con la máscara y se escala por (1-p), mientras que durante evaluación se mantiene sin cambios.
+En resumen, la fundamentación matemática del ejercicio se basa en la regla de la cadena. El gradiente que viene de la capa 
+siguiente, (dout), se multiplica por la derivada de la operación dropout. Por eso, durante entrenamiento el gradiente se 
+filtra con la máscara y se escala por (1-p), mientras que durante evaluación se mantiene sin cambios.
 
 \subsection{Batch Normalization Forward}
 
