@@ -490,6 +490,22 @@ explosión de gradientes, permitiendo un entrenamiento más estable y eficiente.
 
 \subsection{Dropout Forward}
 
+La función dropout\_forward(x, p, train=True, seed=None) aplica la técnica de dropout lo que realiza es un algoritmo que 
+apaga neuronas al azar siguiendo una distribución de Bernoulli con probabilidad $(1 - p)$. 
+La operación se define de la siguiente forma
+$\text{mask} \sim \text{Bernoulli}(1 - p)$ 
+y la salida 
+$\text{out} = \frac{\text{mask}}{1 - p} \cdot x$.
+
+Al dividir el resultado entre $(1 - p)$ se logra reajustar la escala de los datos. 
+Esto garantiza que el promedio de los valores de salida no cambie aunque se haya apagado parte de las neuronas. 
+Durante la etapa de evaluación o prueba, el dropout no se aplica. Los datos pasan directamente sin sufrir ningún cambio, por lo que la operación es simplemente $\text{out} = x$.
+Para entender mejor las variables que recibe la función son \textbf{x}que es la matriz que 
+contiene las activaciones de la capa anterior. Después \textbf{p} que es el número entre 0 y 1 que representa la probabilidad de apagar una neurona.
+También está \textbf{train} la cúal es un boolean, donde si es True, significa que la red está entrenando y se aplica el dropout. Si es False, la red está evaluando y los datos pasan sin cambios. 
+Por último, \textbf{seed} es una semilla opcional para el generador de números aleatorios. Sirve para que la máscara aleatoria sea reproducible y marque los mismos resultados al hacer pruebas.
+
+
 \subsection{Dropout Backward}
 
 La funcóin dropout\_backward(dout, mask, p, train = True), calcula el gradiente. Hay 2 casos si se encuentra en 
@@ -541,7 +557,23 @@ filtra con la máscara y se escala por (1-p), mientras que durante evaluación s
 
 \subsection{Batch Normalization Forward}
 
+
 \subsection{Batch Normalization Backward}
+
+La función batchnorm\_backward(dout, cache) calcula los gradientes de los parámetros y de la entrada durante la etapa de retropropagación. 
+Tomando como base el forward, donde los datos se normalizan como $\hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}$ y se 
+transforman mediante $y_i = \gamma \hat{x}_i + \beta$, el paso hacia atrás calcula cómo afecta el error a cada componente usando la regla de la cadena. 
+Primero, se calculan los gradientes de los parámetros de ajuste sumando los impactos a lo largo de los datos. 
+El desplazamiento se obtiene con $\text{dbeta} = \sum \text{dout}$ y la escala con $\text{dgamma} = \sum \text{dout} \cdot \hat{x}$. 
+Luego, para obtener el gradiente respecto a la entrada original ($\text{dx}$), se debe considerar
+que cada dato afecta a la media $\mu_B = \frac{1}{N}\sum x_i$ y a la varianza $\sigma_B^2 = \frac{1}{N}\sum (x_i - \mu_B)^2$ de todo el lote.
+Al agrupar matemáticamente los caminos del gradiente intermedio $\text{dhat\_x} = \text{dout} \cdot \gamma$, el error acumulado de la 
+media $\text{dmu} = \text{mean}(\text{dhat\_x})$ y el de la varianza $\text{dvar} = \text{mean}(\text{dhat\_x} \cdot (x - \mu_B))$, se llega a la 
+ecuación final optimizada, la cual es $\text{dx} = \frac{1}{\sqrt{\sigma_B^2 + \epsilon}} \cdot (\text{dhat\_x} - \text{dmu} - \hat{x} \cdot \text{dvar})$.
+POr otra parte las variables que recibe esta función son \textbf{dout} que s el gradiente que viene desde la capa 
+siguiente. El \textbf{cache} el cual es un diccionario que guarda las variables calculadas en el paso hacia adelante. 
+Contiene la entrada original \texttt{x}, la entrada normalizada \texttt{x\_norm}, la media del lote \texttt{mean}, 
+la varianza \texttt{var}, el parámetro de escala \texttt{gamma} y el valor de estabilidad numérica \texttt{eps}.
 
 \subsection{Layer Normalization Forward \& Backward}
 \newpage
