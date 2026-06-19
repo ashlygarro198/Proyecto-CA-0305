@@ -226,6 +226,7 @@ __marimo__/
 *.snm
 *.vrb
 *.xdv
+docs\Bitacora_2\*Bitacora_2.pdf
 # Archivos temporales de editores LaTeX
 *.backup
 *~

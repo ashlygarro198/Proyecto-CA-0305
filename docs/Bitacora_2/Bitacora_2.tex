@@ -1,13 +1,19 @@
 \documentclass[12pt]{article}
-
-\usepackage[spanish]{babel}
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage[backend=biber,style=apa]{biblatex}
+\addbibresource{../referencias.bib}
 \usepackage{geometry}
-\usepackage{amsmath, amssymb}
-\usepackage{array}
-
+\usepackage{url}
 \geometry{margin=2.5cm}
+
 \begin{document}
 \begin{titlepage}
 \centering
@@ -32,54 +38,544 @@ Alessandro Umaña Vega & C37963 \\
 \vspace*{\fill}
 
 \end{titlepage}
-
+\tableofcontents
 \newpage
 
 % -------------------------
-\section*{Fundamentación Matemática}
-\subsection*{Task 02: Linear Layer Backward}
+\section{Fundamentación Matemática}
+\subsection{Linear Layer Forward}
+Para iniciar se define una capa lineal, la cual esta formada por la matriz W, donde cada entrada se le asocia un peso, la matriz X, 
+la matriz con los datos de la entradas y b un sesgo general. Este procedimiento permite hacer transformaciones iniciales importantes 
+de la forma 
+$$
+Y = WX + b
+$$
+Donde la multiplciación entre W y X es de forma matricial.
 
-\subsection*{Task 10: Weight Initialization (Xavier/Glorot)}
-La inicialización Xavier surge del problema de la propagación de señales en redes neuronales profundas. 
-Cuando una red tiene muchas capas, los valores que se transmiten entre ellas pueden hacerse cada vez más 
-pequeños o cada vez más grandes. Esto provoca dos fenómenos conocidos como desvanecimiento de gradientes 
-(vanishing gradients) y explosión de gradientes (exploding gradients), los cuales dificultan o incluso impiden 
-el entrenamiento de la red.
+\subsection{Linear Layer Backward}
+Durante el entrenamiento de una red neuronal, el algoritmo de retropropagación (\textit{backpropagation}) 
+calcula cómo cambia la función de pérdida con respecto a las variables y parámetros del modelo mediante 
+aplicaciones sucesivas de la regla de la cadena. Según \textcite{Goodfellow2016}, este procedimiento 
+permite propagar información sobre el error desde la salida de la red hacia las capas anteriores, 
+obteniendo los gradientes necesarios para actualizar los parámetros durante el proceso de optimización.
 
-Considere una capa lineal definida por $y = Wx+b$ donde x representa las entradas, W la matriz de pesos y b el vector 
-de sesgos. El objetivo es elegir valores iniciales para W de forma que la variabilidad de las activaciones se mantenga 
-aproximadamente constante al atravesar las capas.
+Considere una capa lineal definida por
 
-Si asumimos que las entradas son independientes y tienen varianza $var(x)$, la varianza de la salida $y$ puede aproximarse por:
-$$var(y) \approx fan_{in} \cdot var(W)var(x)$$ donde $fan_{in}$ es la cantidad de conexiones de cada neurona. Esto nos muestra que la 
-varianza de la salida depende directamente del número de entradas y de la varianza de los pesos.
+$$
+Y = XW + b,
+$$
 
-Para que la señal conserve aproximadamente la misma magnitud al pasar de una capa a otra, se busca que $var(y) \approx var(x)$, esto implica
-que $fan_{in} \cdot var(W) = 1$. De esta manera, la varianza de los pesos debe ser inversamente proporcional al número de entradas.
-Xavier propone inicializar los pesos mediante una distribución uniforme simétrica alrededor de cero. Si los pesos se distribuyen como U(-a,a), la varianza de dicha distribución es 
-$$var(W) = \frac{a^2}{3}$$
+donde $X$ representa la matriz de entradas, $W$ la matriz de pesos y $b$ el vector de sesgos. 
+Durante la propagación hacia adelante, esta transformación combina linealmente las características de 
+entrada para producir la salida de la capa.
 
-Sin embargo, no solo es importante que la información que 
-entra a la red mantenga una magnitud estable mientras avanza 
-desde la capa de entrada hasta la capa de salida (propagación 
-hacia adelante o forward pass). Durante el entrenamiento 
-también se envían señales de error en sentido contrario, 
-desde la salida hacia las capas anteriores, para actualizar 
-los pesos (retropropagación o backpropagation). Si estas 
-señales de error se vuelven demasiado grandes o demasiado 
-pequeñas, el aprendizaje se vuelve inestable. Por esta 
-razón, Xavier no considera únicamente el número de 
-conexiones de entrada $(fan_{in})$, sino también el 
-número de conexiones de salida $(fan_{out})$, buscando 
-equilibrar tanto el flujo de información durante la 
-propagación hacia adelante como el flujo de gradientes 
-durante la retropropagación.
+En la etapa de retropropagación se recibe un gradiente proveniente de la siguiente capa, 
+denominado \textit{upstream gradient} y representado por $dout$. 
+Este gradiente es a la derivada de la función de pérdida con respecto a la salida de la capa:
 
-Al combinar ambos efectos, se obtiene el límite
-$$a = \sqrt{\frac{6}{fa_{in}+fan_{out}}}$$
-por lo que los pesos se generan tales que
+$$
+dout=\frac{\partial L}{\partial Y}.
+$$
+
+Cada elemento de $dout$ indica la sensibilidad de la función de pérdida ante cambios en 
+la salida correspondiente de la capa lineal. Aplicando la regla de la cadena descrita por \textcite{Goodfellow2016} 
+a la transformación $Y=XW+b$, es posible obtener los gradientes respecto a las entradas, los pesos y los sesgos.
+
+El gradiente respecto a la entrada se calcula mediante
+
+$$
+dx=\frac{\partial L}{\partial X}
+=
+dout\,W^{T}.
+$$
+
+Este resultado tiene las mismas dimensiones que la matriz de entrada y permite continuar la propagación del e
+rror hacia las capas anteriores de la red.
+
+Por otra parte, el gradiente respecto a los pesos se obtiene como
+
+$$
+dw=\frac{\partial L}{\partial W}
+=
+X^{T}dout.
+$$
+
+Este gradiente cuantifica cuánto contribuye cada peso al error total del modelo y es la información utilizada 
+más adelante por los algoritmos de optimización para actualizar los parámetros.
+
+Por último, el gradiente respecto al vector de sesgos se obtiene sumando las contribuciones de todas las observaciones 
+consideradas en la entrada:
+
+$$
+db=\frac{\partial L}{\partial b}
+=
+\sum_{i=1}^{N}\frac{\partial L}{\partial Y_i}.
+$$
+
+En la implementación, esta operación equivale a sumar los valores de $dout$ a lo largo de la dimensión 
+correspondiente a las observaciones. Esto ocurre porque cada componente del sesgo afecta de igual forma
+a todas las observaciones procesadas.
+
+Debido a esto, la retropropagación de una capa lineal genera tres gradientes principales, $dx$, que permite continuar 
+el flujo de gradientes hacia capas anteriores, $dw$, que mide la sensibilidad de la pérdida respecto a los pesos,
+ y $db$, que cuantifica la influencia de los sesgos sobre el error. 
+ Estos gradientes son utilizados más adelante por algoritmos de optimización, como el descenso por gradiente estocástico (SGD), 
+ para actualizar los parámetros y mejorar progresivamente el desempeño de la red neuronal \parencite{Goodfellow2016}.
+\subsection{ReLU Activation Forward}
+
+\subsection{ReLU Activation Backward}
+
+\subsection{Sigmoid Activation}
+La función de activación sigmoide es una de las funciones más utilizadas en aprendizaje 
+automático ya a que transforma cualquier número real en un valor entre 0 y 1. Matemáticamente se define como
+
+$$
+\sigma(x)=\frac{1}{1+e^{-x}}.
+$$
+
+Según \textcite{Goodfellow2016}, esta función se utiliza frecuentemente para modelar 
+probabilidades, ya que sus salidas coinciden con el rango válido de parámetros 
+de una distribución Bernoulli. Debido a esto, es común utilizarla en la capa de salida de problemas de 
+clasificación binaria.
+
+Durante la propagación hacia adelante (\textit{forward pass}), cada elemento de la entrada $x$
+es transformado mediante la función sigmoide para obtener la salida
+
+$$
+out=\sigma(x).
+$$
+
+Cuando los valores de entrada son muy negativos, la salida se aproxima a 0, cuando son muy positivos, 
+la salida se aproxima a 1, y para $x=0$, la salida toma el valor de 0.5. Debido a que el cálculo de exponenciales 
+puede generar problemas numéricos para valores extremos de $x$, es común utilizar implementaciones numéricamente 
+estables que emplean expresiones equivalentes según el signo de la entrada, como
+
+$$
+\sigma(x)=\frac{e^x}{1+e^{x}}.
+$$
+
+Una propiedad importante de la función sigmoide es que su derivada puede expresarse 
+utilizando únicamente el valor obtenido en la propagación hacia adelante:
+
+$$
+\sigma'(x)=\sigma(x)(1-\sigma(x)).
+$$
+
+Esta característica permite implementar de manera correcta la retropropagación (\textit{backpropagation}), 
+ya que no es necesario recalcular exponenciales para obtener la derivada.
+
+Durante la retropropagación se recibe un gradiente obtenido de las capas posteriores de la red, 
+denominado \textit{upstream gradient} y representado por $dout$. Este valor corresponde a la derivada de 
+la función de pérdida respecto a la salida de la función sigmoide, es decir,
+
+$$
+dout=\frac{\partial L}{\partial out},
+$$
+
+donde $L$ representa la función de pérdida.
+
+Aplicando la regla de la cadena, el gradiente respecto a la entrada se calcula como
+
+$$
+\frac{\partial L}{\partial x}
+$$
+
+$$
+=\frac{\partial L}{\partial out} \frac{\partial out}{\partial x}
+$$
+
+$$=dout \cdot \sigma(x)(1-\sigma(x)).$$
+
+Por lo tanto, el gradiente de salida de la operación se obtiene multiplicando el 
+gradiente recibido desde la capa siguiente por la derivada local de la función sigmoide.
+
+Sin embargo, \textcite{GLOROT2010} señalan que la función sigmoide presenta una 
+limitación importante conocida como saturación. Cuando las entradas toman valores muy 
+grandes o muy pequeños, la salida de la función se aproxima a 1 o 0 y su derivada tiende a cero. 
+Como consecuencia, los gradientes que se propagan hacia las capas anteriores pueden volverse extremadamente 
+pequeños, produciendo el fenómeno conocido como desvanecimiento de gradientes (\textit{vanishing gradients}). 
+Este problema dificulta el entrenamiento de redes neuronales profundas y motivó el desarrollo de técnicas de 
+inicialización, como Xavier Initialization, que buscan mantener estable la magnitud de las activaciones y 
+los gradientes a través de las capas de la red.
+\subsection{Tanh Activation}
+
+\subsection{MSE Loss Forward \& Backward}
+
+Para el ejercicio \textit{MSE Loss Forward \& Backward}, se crea una función que recibe como parámetros los valores de 
+nuestra predicción y los valores reales que debieron obtenerse. Primero, se comparan ambos valores y se calcula la 
+diferencia entre ellos, la cual representa el error. Para evitar que el error sea negativo y para penalizar más los 
+errores grandes, este error se eleva al cuadrado.
+
+Como queremos obtener el promedio del error cuadrático, se utiliza '.mean()' para calcular la pérdida, también llamada 'loss'.
+
+El MSE (por sus siglas en inglés Mean Squared Error), es una de las funciones de pérdida más utilizadas en machine learning. 
+Esta función mide la diferencia entre las predicciones y los valores reales, y es especialmente útil porque castiga con 
+mayor fuerza los errores grandes en comparación con los errores pequeños.
+
+También es importante calcular el gradiente, ya que este indica cómo cambia la pérdida con respecto a cada valor predicho. 
+La fórmula de la pérdida MSE es:
+
+$$
+L = \frac{1}{N \cdot D} \sum_{k,l} \left( y_{\text{pred},kl} - y_{\text{true},kl} \right)^2
+$$
+
+Para derivar con respecto a un valor específico $(y_{\text{pred},ij})$, 
+se plantea:
+
+$$
+\frac{\partial L}{\partial y_{\text{pred},ij}} =
+\frac{\partial}{\partial y_{\text{pred},ij}}
+\left[
+\frac{1}{N \cdot D}
+\sum_{k,l}
+\left(
+y_{\text{pred},kl} - y_{\text{true},kl}
+\right)^2
+\right]
+$$
+
+Como solo el término ((i,j)) aparece en esa derivada, tq:
+
+$$
+\frac{\partial L}{\partial y_{\text{pred},ij}} =
+\frac{1}{N \cdot D}
+\cdot
+2
+\left(
+y_{\text{pred},ij} - y_{\text{true},ij}
+\right)
+$$
+
+Por lo tanto, el gradiente:
+
+$$
+\frac{\partial L}{\partial y_{\text{pred},ij}} =
+\frac{2}{N \cdot D}
+\left(
+y_{\text{pred},ij} - y_{\text{true},ij}
+\right)
+$$
+
+El número 2 aparece porque al derivar un término elevado al cuadrado, baja el exponente. Además, 
+el factor $(\frac{1}{N \cdot D})$ normaliza el resultado según la cantidad total de elementos.
+
+En Python, esto se representa calculando primero el error:
+
+$$error = y_{pred} - y_{true}$$
+
+Luego, la pérdida se obtiene con el promedio del error al cuadrado:
+
+loss = np.mean(error ** 2)
+
+Y el gradiente se calcula aplicando la fórmula:
+
+dx = (2 / error.size) * error
+
+La idea clave es que el gradiente es proporcional al error: cuando el error es mayor, el gradiente también será mayor. 
+Esto permite saber cuánto debe ajustarse la predicción para reducir la pérdida. Sin embargo, en los métodos de optimización, 
+se avanza en la dirección contraria al gradiente, porque el gradiente señala hacia dónde aumenta la pérdida.
+
+\subsection{Binary Cross Entropy Loss}
+
+\subsection{Categorical Cross Entropy Backward}
+La función categorical\_ce\_backward, recibe como parámetros $probs$ y $targets$. La variable $probs$
+ contiene las probabilidades generadas por la función $softmax$ para cada muestra y cada clase, mientras que $targets$ 
+ contiene la clase correcta de cada muestra. 
+Entonces, ambos valores se convierten en arreglos de NumPy para poder trabajar con ellos de forma vectorizada. 
+Luego, se obtiene N usando probs.shape[0], ya que N representa la cantidad de filas, es decir, la cantidad de muestras. 
+Después, se crea una copia de probs llamada dx, para no modificar los datos originales. Como el gradiente de softmax combinado 
+con entropía cruzada se simplifica a probs y\_true lo que se hace es restar 1 en la posición correspondiente a la clase 
+correcta de cada fila. Esto se logra con $dx[np.arange(N), targets] -= 1$. 
+Como ultimo, se divide dx entre N porque el ejercicio pide obtener el gradiente promedio. La función devuelve dx, que 
+representa el gradiente con respecto a los logits. 
+
+La pérdida utilizada es la combinación de Softmax + Cross Entropy. Primero, la función softmax convierte los 
+logits $(z_{ij})$ en probabilidades $(p_{ij})$, donde cada valor representa la probabilidad de que la observación (i) 
+pertenezca a la clase (j).
+
+La pérdida Cross Entropy toma únicamente la probabilidad de la clase correcta $(p_{i,y_i})$ y calcula su logaritmo 
+negativo. Por eso, la pérdida se escribe como:
+
+$$
+L = -\frac{1}{N}\sum_{i=1}^{N}\log(p_{i,y_i})
+$$
+
+Al derivar esta pérdida con respecto al logit $(z_{ij})$, se deben considerar las derivadas de softmax y de Cross 
+Entropy. Aunque al inicio aparecen varios términos, incluyendo términos cruzados entre clases, estos se simplifican.
+
+Después de aplicar la regla de la cadena y simplificar, el resultado final queda como:
+
+$$
+\frac{\partial L}{\partial z_{ij}} = p_{ij} - y_{ij}
+$$
+
+donde $(y_{ij})$ vale 1 si la clase (j) es la clase correcta, y 0 si no lo es.
+
+En Python, esto se representa copiando la matriz de probabilidades y restando 1 únicamente en la posición de la 
+clase correcta de cada fila:
+
+$$
+dx = probs
+$$
+
+$$
+dx[i, y_i] = dx[i, y_i] - 1
+$$
+
+Finalmente, como la pérdida se calcula como un promedio para las (N) observaciones, el gradiente se divide entre (N):
+
+$$
+dx = \frac{dx}{N}
+$$
+
+La idea clave es que la derivación completa de Softmax + Cross Entropy se reduce a una forma muy simple: a 
+las probabilidades predichas se les resta la matriz real codificada en one-hot.
+
+
+\subsection{SGD Optimizer}
+El descenso por gradiente (o SGD por sus siglas en inglés) es uno de los métodos de optimización 
+más usados en el entrenamiento de redes neuronales. De acuerdo con \textcite{Goodfellow2016}, el 
+objetivo del aprendizaje es minimizar una función de pérdida $L$, la cual mide la diferencia entre
+las predicciones del modelo y los valores reales observados.
+
+Para lograr esta minimización, se calcula el gradiente de la función de pérdida con respecto a cada
+parámetro de la red mediante el algoritmo de retropropagación. Este gradiente se calcula como
+$$dw = \frac{\partial L}{\partial w}$$
+donde $w$ es el peso o parámetro del modelo. El gradiente indica la dirección de mayor incremento de la 
+función de pérdida. Por lo tanto, para reducir el error, es necesario modificar los parámetros en la
+dirección opuesta al gradiente.
+
+La regla de actualización utilizada por SGD está dada por
+
+$$w_{t+1}=w_t-\eta \nabla L(w_t)$$
+
+donde $w_t$ representa el valor actual del parámetro, $\nabla L(w_t)$ es el gradiente de la función de pérdida y $\eta$
+corresponde a la tasa de aprendizaje (\textit{learning rate}).
+
+En la implementación, el gradiente calculado durante la retropropagación se almacena en la variable $dw$, 
+mientras que la tasa de aprendizaje se representa mediante $lr$. De esta forma, la actualización de los 
+parámetros puede escribirse como
+
+$$w_{\text{nuevo}} = w - lr \cdot dw$$
+
+La variable $dw$ contiene información sobre cuánto cambia la función de pérdida cuando se modifica cada elemento de $w$. 
+Si un componente de $dw$ es positivo, significa que aumentar dicho peso incrementaría el error, por lo que SGD reduce su 
+valor. En cambio, si el gradiente es negativo, el algoritmo aumenta el peso correspondiente para disminuir la pérdida.
+
+Según \textcite{Goodfellow2016}, la tasa de aprendizaje controla el tamaño de cada actualización. 
+Valores demasiado grandes pueden provocar divergencia durante el entrenamiento, mientras 
+que valores demasiado pequeños producen una convergencia lenta. Por esta razón, la correcta elección de $lr$ 
+es importante para un correcto funcionamiento del algoritmo.
+
+La actualización se realiza elemento a elemento sobre los tensores de parámetros, 
+permitiendo trabajar con escalares, vectores, matrices o tensores de mayor dimensión mediante operaciones 
+vectorizadas. Como resultado, se obtiene un nuevo conjunto de parámetros cuyo objetivo es reducir el valor de la 
+función de pérdida y mejorar de manera progresiva el funcionamiento de la red neuronal.
+\subsection{Momentum Optimizer}
+ El optimizador del momentum explica \textcite{Goodfellow2016} se introduce una variable $v$ que indica la velocidad, 
+ la cual es la dirección y velocidad en la que el parametro se va a mover dentro del espacio de él mismo. Esta tiene una tendendencia exponencial 
+ decreciente del gradiente negativo y se calcula de la siguiente forma
+ $
+ V_new=\beta*v+dw
+ $
+ $
+ w_new=w-lr*v_new
+ $
+\subsection{RMSProp Optimizer}
+
+RMSProp es un método de optimización que ajusta la tasa de aprendizaje de forma adaptativa. Esto significa que no 
+actualiza todos los pesos de la misma manera, sino que toma en cuenta el comportamiento reciente del gradiente para 
+hacer actualizaciones más estables.
+
+El primer paso consiste en actualizar el caché:
+
+$$
+s_{\text{nuevo}} = \beta \cdot s + (1 - \beta) \cdot dw^2
+$$
+
+En esta fórmula, (s) representa el caché anterior, (dw) es el gradiente actual y $(\beta)$, también llamado decay, 
+controla cuánta memoria se conserva de los gradientes anteriores. Este caché funciona como un promedio móvil de los 
+gradientes al cuadrado.
+
+Luego, se calcula una tasa de aprendizaje adaptativa:
+
+$$
+\text{aprendizaje adaptativo} =
+\frac{lr}{\sqrt{s_{\text{nuevo}}} + \epsilon}
+$$
+
+Aquí, (lr) representa la tasa de aprendizaje original y $(\epsilon)$ es un valor muy pequeño que se utiliza para 
+evitar divisiones entre cero. La raíz cuadrada del caché permite ajustar el tamaño del paso dependiendo de qué tan 
+grandes han sido los gradientes.
+
+Después, se actualizan los pesos:
+
+$$
+w_{\text{nuevo}} = w - \text{aprendizaje adaptativo} \cdot dw
+$$
+
+Esto significa que los pesos se mueven en la dirección contraria al gradiente, ya que el objetivo es reducir la pérdida 
+del modelo.
+
+La función finalmente retorna dos valores: los pesos actualizados $(w_{\text{nuevo}})$ y el nuevo caché $(s_{\text{nuevo}})$. 
+Este nuevo caché se debe guardar porque será utilizado en la siguiente iteración, por eso RMSProp es un proceso iterativo.
+
+La tasa de decaimiento b controla la memoria del algoritmo. Si b = 0, solo se toma en cuenta el gradiente actual. Si b = 0.9, 
+se conserva el 90\% del caché anterior, que suele ser un valor común. Si b = 0.99, el algoritmo conserva más memoria, por lo 
+que la adaptación es más lenta pero más estable.
+
+En resumen, RMSProp ayuda a que el entrenamiento sea más estable porque divide el gradiente entre una medida acumulada de los 
+gradientes recientes. De esta forma, evita actualizaciones demasiado grandes cuando los gradientes son altos y permite un 
+control del aprendizaje.
+
+\subsection{Adam Optimizer}
+
+\subsection{Weight Initialization (Xavier/Glorot)}
+La inicialización Xavier fue propuesta por \textcite{GLOROT2010} para 
+mantener aproximadamente constante la varianza de las activaciones y de 
+los gradientes a través de las capas de una red neuronal profunda. 
+Esto ayuda a evitar que las señales se amplifiquen o atenúen excesivamente 
+durante la propagación hacia adelante y hacia atrás, facilitando el 
+entrenamiento de la red.
+
+Los autores observaron que, cuando la varianza de las señales cambia 
+significativamente entre capas, el entrenamiento se vuelve difícil 
+debido a que las activaciones y los gradientes pueden crecer o 
+disminuir progresivamente, donde las activaciones corresponden a las salidas 
+producidas por las neuronas después de aplicar la función de activación, 
+mientras que los gradientes representan la sensibilidad de la función de 
+pérdida respecto a los parámetros de la red.
+
+Considere una capa lineal definida por $y = Wx+b$ donde $x$ representa las 
+entradas, $W$ la matriz de pesos y $b$ el vector 
+de sesgos. 
+
+Si asumimos que las entradas son independientes y tienen varianza $var(x)$, 
+la varianza de la salida $y$ puede aproximarse por:
+$$var(y) \approx fan_{in} \cdot var(W)var(x)$$ donde $fan_{in}$ es la 
+cantidad de conexiones de cada neurona. Esto nos muestra que la 
+varianza de la salida depende directamente del número de entradas 
+y de la varianza de los pesos.
+
+Para que la señal conserve aproximadamente la misma magnitud al pasar de 
+una capa a otra, se busca que $var(y) \approx var(x)$, esto implica
+que $fan_{in} \cdot var(W) = 1$. De esta manera, la varianza 
+de los pesos debe ser inversamente proporcional al número de entradas.
+
+Sin embargo, \textcite{GLOROT2010} señalan que también es necesario 
+considerar la propagación hacia atrás de los gradientes durante el 
+proceso de retropropagación. Si los gradientes aumentan o disminuyen 
+excesivamente al atravesar las capas, las actualizaciones de los pesos 
+se vuelven inestables o ineficientes. Para equilibrar tanto la propagación 
+hacia adelante como la retropropagación, los autores incorporan además 
+el número de conexiones de salida, denotado por $fan_{out}$.
+
+A partir de este análisis, proponen inicializar los pesos
+mediante una distribución uniforme simétrica alrededor de cero
+cuya varianza sea 
+$$Var(W)=\frac{2}{fan_{in}+fan_{out}}.$$
+Dado que la varianza de una distribución uniforme ($U(-a,a)$) es $Var(W)=\frac{a^2}{3}$
+al igualar ambas expresiones se obtiene 
+$$a=\sqrt{\frac{6}{fan_{in}+fan_{out}}}.$$ 
+
+Por lo tanto, los pesos se inicializan según
 $$W \sim U(-\sqrt{\frac{6}{fa_{in}+fan_{out}}}, \sqrt{\frac{6}{fa_{in}+fan_{out}}})$$
-La idea central es que los pesos no sean ni demasiado grandes ni demasiado pequeños. Si fueran muy pequeños, las activaciones y los gradientes tenderían a desaparecer; si fueran muy grandes, crecerían excesivamente y provocarían inestabilidad numérica. Xavier Initialization encuentra un equilibrio que permite mantener una varianza relativamente constante tanto en la propagación hacia adelante como en la propagación hacia atrás.
 
-Por esta razón, esta técnica funciona especialmente bien en redes que utilizan funciones de activación como sigmoid o tanh, ya que estas funciones son simétricas alrededor de cero y se benefician de una distribución equilibrada de las activaciones. Gracias a ello, el entrenamiento resulta más estable y la convergencia suele ser más rápida.
+La idea central de este método es mantener una magnitud relativamente 
+estable de las activaciones y de los gradientes a través de las capas 
+de la red. De esta forma, se reduce el riesgo de desvanecimiento o 
+explosión de gradientes, permitiendo un entrenamiento más estable y eficiente.
+
+\subsection{Weight Initialization (Kaiming/He)}
+
+\subsection{Dropout Forward}
+
+La función dropout\_forward(x, p, train=True, seed=None) aplica la técnica de dropout lo que realiza es un algoritmo que 
+apaga neuronas al azar siguiendo una distribución de Bernoulli con probabilidad $(1 - p)$. 
+La operación se define de la siguiente forma
+$\text{mask} \sim \text{Bernoulli}(1 - p)$ 
+y la salida 
+$\text{out} = \frac{\text{mask}}{1 - p} \cdot x$.
+
+Al dividir el resultado entre $(1 - p)$ se logra reajustar la escala de los datos. 
+Esto garantiza que el promedio de los valores de salida no cambie aunque se haya apagado parte de las neuronas. 
+Durante la etapa de evaluación o prueba, el dropout no se aplica. Los datos pasan directamente sin sufrir ningún cambio, por lo que la operación es simplemente $\text{out} = x$.
+Para entender mejor las variables que recibe la función son \textbf{x}que es la matriz que 
+contiene las activaciones de la capa anterior. Después \textbf{p} que es el número entre 0 y 1 que representa la probabilidad de apagar una neurona.
+También está \textbf{train} la cúal es un boolean, donde si es True, significa que la red está entrenando y se aplica el dropout. Si es False, la red está evaluando y los datos pasan sin cambios. 
+Por último, \textbf{seed} es una semilla opcional para el generador de números aleatorios. Sirve para que la máscara aleatoria sea reproducible y marque los mismos resultados al hacer pruebas.
+
+
+\subsection{Dropout Backward}
+
+La funcóin dropout\_backward(dout, mask, p, train = True), calcula el gradiente. Hay 2 casos si se encuentra en 
+entrenamiento o no. Matemáticamente, durante el entrenamiento se utiliza una máscara binaria (m), donde cada 
+valor puede ser 0 o 1. Si m = 0, la neurona se apaga y no participa 
+en el cálculo; si m = 1, la neurona permanece activa.
+
+En el forward pass, usando dropout invertido, la salida se calcula como:
+
+$$
+out = \frac{x \cdot m}{1-p}
+$$
+
+donde (p) representa la probabilidad de apagar una neurona, y (1-p) representa la probabilidad de 
+mantenerla activa. La división entre (1-p) se hace para compensar las neuronas apagadas y mantener estable 
+la escala de los valores durante el entrenamiento.
+
+Luego, en el backward pass, se aplica la regla de la cadena. Como:
+
+$$
+out = \frac{x \cdot m}{1-p}
+$$
+
+entonces la derivada de (out) con respecto a (x) es:
+
+$$
+\frac{\partial out}{\partial x} = \frac{m}{1-p}
+$$
+
+Por eso, el gradiente queda como:
+
+$$
+dx = dout \cdot \frac{m}{1-p}
+$$
+
+dx = mask * dout / (1-p)
+
+Si una posición de la máscara vale 0, el gradiente en esa neurona también será 0, porque esa neurona fue apagada. 
+Si la máscara vale 1, el gradiente pasa, pero se escala dividiéndolo entre (1-p).
+
+Cuando el modelo no está en entrenamiento, no se aplica dropout, porque en evaluación se utilizan todas las neuronas. 
+Por eso, en ese caso el gradiente simplemente se devuelve igual:
+
+dx = dout
+
+En resumen, la fundamentación matemática del ejercicio se basa en la regla de la cadena. El gradiente que viene de la capa 
+siguiente, (dout), se multiplica por la derivada de la operación dropout. Por eso, durante entrenamiento el gradiente se 
+filtra con la máscara y se escala por (1-p), mientras que durante evaluación se mantiene sin cambios.
+
+\subsection{Batch Normalization Forward}
+
+
+\subsection{Batch Normalization Backward}
+
+La función batchnorm\_backward(dout, cache) calcula los gradientes de los parámetros y de la entrada durante la etapa de retropropagación. 
+Tomando como base el forward, donde los datos se normalizan como $\hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}$ y se 
+transforman mediante $y_i = \gamma \hat{x}_i + \beta$, el paso hacia atrás calcula cómo afecta el error a cada componente usando la regla de la cadena. 
+Primero, se calculan los gradientes de los parámetros de ajuste sumando los impactos a lo largo de los datos. 
+El desplazamiento se obtiene con $\text{dbeta} = \sum \text{dout}$ y la escala con $\text{dgamma} = \sum \text{dout} \cdot \hat{x}$. 
+Luego, para obtener el gradiente respecto a la entrada original ($\text{dx}$), se debe considerar
+que cada dato afecta a la media $\mu_B = \frac{1}{N}\sum x_i$ y a la varianza $\sigma_B^2 = \frac{1}{N}\sum (x_i - \mu_B)^2$ de todo el lote.
+Al agrupar matemáticamente los caminos del gradiente intermedio $\text{dhat\_x} = \text{dout} \cdot \gamma$, el error acumulado de la 
+media $\text{dmu} = \text{mean}(\text{dhat\_x})$ y el de la varianza $\text{dvar} = \text{mean}(\text{dhat\_x} \cdot (x - \mu_B))$, se llega a la 
+ecuación final optimizada, la cual es $\text{dx} = \frac{1}{\sqrt{\sigma_B^2 + \epsilon}} \cdot (\text{dhat\_x} - \text{dmu} - \hat{x} \cdot \text{dvar})$.
+POr otra parte las variables que recibe esta función son \textbf{dout} que s el gradiente que viene desde la capa 
+siguiente. El \textbf{cache} el cual es un diccionario que guarda las variables calculadas en el paso hacia adelante. 
+Contiene la entrada original \texttt{x}, la entrada normalizada \texttt{x\_norm}, la media del lote \texttt{mean}, 
+la varianza \texttt{var}, el parámetro de escala \texttt{gamma} y el valor de estabilidad numérica \texttt{eps}.
+
+\subsection{Layer Normalization Forward \& Backward}
+\newpage
+\printbibliography
 \end{document}
