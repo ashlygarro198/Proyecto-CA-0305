@@ -123,6 +123,40 @@ el flujo de gradientes hacia capas anteriores, $dw$, que mide la sensibilidad de
  para actualizar los parámetros y mejorar progresivamente el desempeño de la red neuronal \parencite{Goodfellow2016}.
 \subsection{ReLU Activation Forward}
 
+La función de activación ReLU, conocida formalmente como Unidad Lineal Rectificada, 
+es un operador matemático seccionado que actúa como un umbral de activación para las neuronas 
+artificiales. Desde el punto de vista algebraico, la función se define formalmente como el 
+máximo entre el cero y el valor de la entrada, lo cual se denota matemáticamente mediante 
+la expresión:
+\[
+ReLU(x) = \max(0, x)
+\]
+
+Esta formulación implica que la función se divide en dos ramas principales según el 
+signo del argumento de entrada: para cualquier valor estrictamente positivo la función 
+se comporta como la función identidad, mientras que para cualquier valor negativo o igual 
+a cero la función anula por completo la señal, lo cual se representa de forma analítica mediante 
+el sistema:
+\[
+ReLU(x) = \begin{cases} x & \text{si } x > 0 \\ 0 & \text{si } x \le 0 \end{cases}
+\]
+
+Para comprender el comportamiento de esta activación durante el entrenamiento de una red 
+neuronal, es indispensable analizar su derivada con respecto a la entrada, ya que este 
+valor determina cómo se propagan los cambios a través del algoritmo de retropropagación. 
+La derivada de la función ReLU corresponde matemáticamente a la función escalón de Heaviside, 
+definida formalmente como:
+\[
+\frac{d}{dx}ReLU(x) = \begin{cases} 1 & \text{si } x > 0 \\ 0 & \text{si } x < 0 \end{cases}
+\]
+
+Es importante señalar que la función ReLU no es diferenciable en el punto exacto 
+donde $x = 0$ debido a la existencia de un punto anguloso en su geometría, donde el 
+límite derivativo por la izquierda es cero y por la derecha es uno; sin embargo, este 
+inconveniente se resuelve mediante el uso de subgradientes, asignando convencionalmente 
+un valor de cero o uno en dicho punto.
+
+
 \subsection{ReLU Activation Backward}
 
 \subsection{Sigmoid Activation}
@@ -277,6 +311,57 @@ se avanza en la dirección contraria al gradiente, porque el gradiente señala h
 
 \subsection{Binary Cross Entropy Loss}
 
+La función de pérdida de entropía cruzada binaria (BCE) consiste en la métrica para 
+evaluar la diferencia entre las distribuciones de probabilidad reales y las predicciones 
+probabilísticas generadas por un modelo. Esta función penaliza de forma logarítmica las 
+desviaciones del modelo predictivo respecto a los valores verdaderos. Para una observación 
+individual donde el valor real se denota como $y \in \{0, 1\}$ y la probabilidad predicha 
+por el modelo es $\hat{y} \in [0, 1]$, la pérdida se define mediante la expresión:
+\[
+\mathcal{L} = - \left[ y \log(\hat{y}) + (1 - y) \log(1 - \hat{y}) \right]
+\]
+
+El comportamiento asintótico de las funciones logarítmicas en esta ecuación muestra que
+cuando el valor real es uno, el segundo término se anula y la pérdida tiende a infinito 
+a medida que la predicción se aproxima a cero. De manera análoga, si la valor real es cero, 
+el primer término desaparece y la penalización crece exponencialmente conforme la predicción 
+se acerca a uno. Cuando el análisis se extiende a un conjunto de datos compuesto por $N$ 
+observaciones independientes e idénticamente distribuidas, la función de costo global se 
+determina mediante el promedio de las pérdidas individuales, definiéndose bajo la fórmula:
+\[
+J = -\frac{1}{N} \sum_{i=1}^{N} \left[ y_i \log(\hat{y}_i) + (1 - y_i) \log(1 - \hat{y}_i) \right]
+\]
+
+La evaluación directa de esta fórmula matemática presenta una vulnerabilidad numérica 
+conocida como indeterminación por desbordamiento inferior o indeterminación logarítmica. 
+Si el modelo genera una predicción perfecta pero errónea, como predecir un valor de cero 
+cuando el valor real es uno, el cálculo requiere evaluar $\log(0)$, lo cual tiende a menos 
+infinito y colapsa la estabilidad del algoritmo. Para mitigar eto se introduce una cota i
+nfinitesimal $\varepsilon$, lo que restringe el dominio de las predicciones al intervalo 
+cerrado $[\varepsilon, 1 - \varepsilon]$ y garantiza que los argumentos de ambos logaritmos 
+sean números reales positivos.
+
+Para llevar a cabo la optimización del modelo mediante algoritmos basados en el gradiente, 
+se debe derivar la función de costo respecto a cada una de las predicciones. Así, se obtiene la 
+tasa de cambio instantánea de la pérdida individual con respecto a un componente predictivo 
+específico:
+\[
+\frac{\partial \mathcal{L}}{\partial \hat{y}} = - \left[ \frac{y}{\hat{y}} - \frac{1 - y}{1 - \hat{y}} \right] = \frac{\hat{y} - y}{\hat{y}(1 - \hat{y})}
+\]
+
+No obstante, la pérdida de entropía cruzada binaria no se evalúa de manera aislada sobre 
+variables aleatorias lineales, sino que se acopla directamente con una función de activación 
+sigmoide. La función sigmoide se define formalmente como $\hat{y} = \sigma(x) = (1 + e^{-x})^{-1}$ 
+y posee la derivada $\sigma'(x) = \sigma(x)(1 - \sigma(x))$. Al aplicar la regla de la cadena 
+para obtener el gradiente final de la pérdida global respecto al argumento neto o pre-activación
+$x$, el denominador se cancela con la derivada, simplificando la expresión del gradiente para 
+todo el conjunto de datos a la relación lineal:
+
+\[
+\frac{\partial J}{\partial x_i} = \frac{1}{N} \left[ \frac{\hat{y}_i - y_i}{\hat{y}_i(1 - \hat{y}_i)} \cdot \hat{y}_i(1 - \hat{y}_i) \right] = \frac{1}{N} (\hat{y}_i - y_i)
+\]
+
+
 \subsection{Categorical Cross Entropy Backward}
 La función categorical\_ce\_backward, recibe como parámetros $probs$ y $targets$. La variable $probs$
  contiene las probabilidades generadas por la función $softmax$ para cada muestra y cada clase, mientras que $targets$ 
@@ -430,6 +515,47 @@ control del aprendizaje.
 
 \subsection{Adam Optimizer}
 
+El optimizador Adam combina lo mejor de dos de las extensiones más famosas del descenso 
+de gradiente estocástico, que son el método de momento (Momentum) y el algoritmo RMSProp. 
+En el descenso de gradiente tradicional, los parámetros del modelo se actualizan multiplicando 
+directamente la pendiente actual por una tasa de aprendizaje fija. El problema del enfoque 
+tradicional es que se queda corto en la práctica cuando debe enfrentarse a escenarios de pérdida 
+complejos. Adam resuelve estas complicaciones calculando el primer y el segundo momento, a 
+través de medias móviles exponenciales que siguen las fórmulas de recurrencia:
+
+$$m_{t+1} = \beta_1 m_t + (1 - \beta_1) \nabla L$$$$v_{t+1} = \beta_2 v_t + (1 - \beta_2) (\nabla L)^2$$
+
+El primer momento, denotado como $m_{t+1}$, actúa como un estimador de la media del gradiente. 
+Este término acumula la dirección de los pasos anteriores para que el optimizador avance con 
+fuerza cuando va por un camino consistente y, al mismo tiempo, amortigüe los saltos bruscos 
+y de un lado a otro que no aportan nada. El hiperparámetro $\beta_1$ regula la memoria de 
+esta media móvil, controlando qué tanta relevancia se le otorga al gradiente histórico en 
+comparación con el estímulo instantáneo actual. Por otro lado, el segundo momento no centrado, 
+representado por $v_{t+1}$, estima la varianza o la magnitud cuadrática promedio del gradiente a 
+lo largo del tiempo. El parámetro $\beta_2$ controla el decaimiento de esta acumulación 
+cuadrática, que sirve para lograr el escalado adaptativo de la tasa de aprendizaje. 
+Al dividir el gradiente por la raíz cuadrada de este segundo momento, el algoritmo escala 
+de forma inversa el tamaño del paso computacional: los parámetros que experimentan gradientes 
+masivos y frecuentes ven reducida su tasa de aprendizaje efectiva para evitar divergencias, 
+mientras que aquellos parámetros con gradientes diminutos o poco frecuentes reciben un impulso 
+que les permite escapar de puntos de silla con pendientes planas.
+
+$$\hat{m}_{t+1} = \frac{m_{t+1}}{1 - \beta_1^{t+1}}$$$$\hat{v}_{t+1} = \frac{v_{t+1}}{1 - \beta_2^{t+1}}$$
+
+Conforme los pasos de entrenamiento $t$ van aumentando, las potencias $\beta_1^{t+1}$ 
+y $\beta_2^{t+1}$ tienden a cero. Esto significa que la corrección de sesgo hace un trabajo 
+crucial salvando las primeras iteraciones del algoritmo, pero se apaga gradualmente cuando el 
+optimizador ya acumuló suficiente experiencia real sobre la función de pérdida. Con los 
+estimadores ya corregidos, la regla final para actualizar los pesos del modelo se consolida 
+en la ecuación:
+
+$$w_{t+1} = w_t - \frac{\eta}{\sqrt{\hat{v}_{t+1}} + \epsilon} \cdot \hat{m}_{t+1}$$
+
+Donde, $\eta$ representa la tasa de aprendizaje base que definió al inicio. El 
+término $\epsilon$ es una constante infinitesimal que se suma al denominador para evitar 
+que el sistema colapse por una división entre cero si el segundo momento llega a ser nulo.
+
+
 \subsection{Weight Initialization (Xavier/Glorot)}
 La inicialización Xavier fue propuesta por \textcite{GLOROT2010} para 
 mantener aproximadamente constante la varianza de las activaciones y de 
@@ -556,6 +682,74 @@ siguiente, (dout), se multiplica por la derivada de la operación dropout. Por e
 filtra con la máscara y se escala por (1-p), mientras que durante evaluación se mantiene sin cambios.
 
 \subsection{Batch Normalization Forward}
+
+La normalización por lotes, conocida como Batch Normalization, surge como una técnica 
+para mitigar el problema del desvanecimiento o explosión de gradientes y acelerar el 
+entrenamiento de redes neuronales. Durante el aprendizaje, la distribución de las activaciones 
+en la entrada de cada capa cambia constantemente a medida que se modifican los parámetros de 
+las capas previas, un fenómeno denominado desajuste interno de covariables. Para estabilizar 
+estas distribuciones, el algoritmo fuerza a que las activaciones a lo largo de un lote de 
+tamaño $N$ tengan una media de cero y una varianza unitaria para cada una de las $D$ 
+características de forma independiente. No obstante, el comportamiento de esta operación 
+difiere dependiendo de si la red se encuentra en la fase de entrenamiento o en la de 
+evaluación. Cuando la red está en fase de entrenamiento, el algoritmo calcula los 
+estadísticos empíricos utilizando exclusivamente los datos del minilote actual procesado 
+en el paso hacia adelante. Para una característica específica $j$, la media del lote se 
+determina mediante el promedio de los valores observados a lo largo de todas las muestras:
+
+$$\mu_{B,j} = \frac{1}{N} \sum_{i=1}^{N} x_{i,j}$$
+
+Posteriormente, la dispersión de los datos alrededor de dicha media se cuantifica a 
+través de la varianza muestral sesgada de esa misma característica en el lote de observaciones:
+
+$$\sigma_{B,j}^2 = \frac{1}{N} \sum_{i=1}^{N} (x_{i,j} - \mu_{B,j})^2$$
+
+Con estos componentes estadísticos calculados de manera local, cada activación individual 
+se estandariza restándole su media correspondiente y dividiéndola por la raíz cuadrada de 
+la varianza. Se incorpora un parámetro infinitesimal $\epsilon$ al divisor para impedir 
+fallos en caso de que la varianza local colapse a cero:
+
+$$\hat{x}_{i,j} = \frac{x_{i,j} - \mu_{B,j}}{\sqrt{\sigma_{B,j}^2 + \epsilon}}$$
+
+A pesar de que centrar y reducir las variables estabiliza el flujo del gradiente, 
+limitar las activaciones de una capa a una distribución normal estándar puede reducir 
+la capacidad de representación de la red, impidiéndole aprender funciones no lineales 
+esenciales al forzarla a operar únicamente en la región lineal de las funciones de activación. 
+Para contrarrestar esto, el algoritmo introduce una transformación lineal mediante dos 
+parámetros propios de cada característica, denominados factor de escala $\gamma_j$ y factor 
+de desplazamiento $\beta_j$:
+
+$$y_{i,j} = \gamma_j \hat{x}_{i,j} + \beta_j$$
+
+Esta pareja de parámetros permite que la red neuronal anule o modifique de forma autónoma 
+el proceso de normalización si determina que una distribución diferente es óptima para 
+minimizar la pérdida global del modelo, recuperando la identidad original de las activaciones 
+si fuese necesario. Durante esta misma fase de entrenamiento, y debido a que el cálculo de la 
+media y la varianza local introduce un ruido estocástico, la red no puede depender de estos 
+estadísticos cambiantes cuando es utilizada en entornos de producción o prueba. Entonces 
+mientras el modelo entrena, se van construyendo estimaciones globales de la media y la 
+varianza de toda la población mediante el cálculo continuo de medias móviles exponenciales 
+para cada característica, reguladas por un factor de inercia o momento:
+
+$$\mu_{\text{running},j} = \text{momentum} \cdot \mu_{\text{running},j} + (1 - \text{momentum}) \cdot \mu_{B,j}$$
+
+$$\sigma_{\text{running},j}^2 = \text{momentum} \cdot \sigma_{\text{running},j}^2 + (1 - \text{momentum}) \cdot \sigma_{B,j}^2$$
+
+Al pasar al modo de evaluación, la dinámica se modifica por completo con el fin de 
+garantizar que el modelo genere predicciones deterministas y consistentes que dependan 
+exclusivamente de las características intrínsecas de la muestra de entrada, eliminando 
+cualquier dependencia hacia el tamaño o la composición del lote. En este escenario de 
+prueba, los estadísticos calculados sobre el minilote se descartan por completo y se 
+sustituyen directamente por el historial acumulado de las medias móviles exponenciales 
+estimadas durante el entrenamiento:
+
+$$\hat{x}_{i,j} = \frac{x_{i,j} - \mu_{\text{running},j}}{\sqrt{\sigma_{\text{running},j}^2 + \epsilon}}$$
+
+Una vez efectuada esta estandarización, la transformación final se aplica utilizando 
+los mismos valores de los parámetros $\gamma_j$ y $\beta_j$ que fueron optimizados 
+durante el aprendizaje:
+
+$$y_{i,j} = \gamma_j \hat{x}_{i,j} + \beta_j$$
 
 
 \subsection{Batch Normalization Backward}
