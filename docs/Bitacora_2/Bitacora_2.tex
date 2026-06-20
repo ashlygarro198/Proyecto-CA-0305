@@ -159,6 +159,55 @@ un valor de cero o uno en dicho punto.
 
 \subsection{ReLU Activation Backward}
 
+La función de activación ReLU se define como:
+
+\[
+\text{ReLU}(x)=\max(0,x)
+\]
+
+Esto significa que, si el valor de entrada es positivo, se mantiene igual; pero si es negativo o cero, el resultado será $0$.
+
+Su derivada respecto a $x$ es:
+
+\[
+\frac{d}{dx}\text{ReLU}(x)=
+\begin{cases}
+1, & \text{si } x>0 \\
+0, & \text{si } x\le 0
+\end{cases}
+\]
+
+Durante el \textit{backpropagation}, el objetivo es calcular el gradiente de la pérdida con respecto a la entrada $x$. Para hacerlo, se utiliza la regla de la cadena:
+
+\[
+\frac{\partial L}{\partial x}
+=
+\frac{\partial L}{\partial y}
+\cdot
+\frac{\partial y}{\partial x}
+\]
+
+donde:
+
+\begin{itemize}
+\item $\frac{\partial L}{\partial y}$ es el gradiente que proviene de la siguiente capa.
+\item $\frac{\partial y}{\partial x}$ es una función indicadora que vale $1$ si $x>0$ y $0$ en caso contrario.
+\end{itemize}
+
+Por lo tanto:
+
+\[
+\frac{\partial L}{\partial x}
+=
+\frac{\partial L}{\partial y}
+\cdot
+\mathbf{1}_{x>0}
+\]
+
+En otras palabras, el gradiente solo se transmite en las neuronas que tuvieron una entrada positiva. Si la entrada fue negativa o cero, el gradiente se bloquea.
+
+En conclusión, el \textit{backward} de ReLU funciona como un filtro: solo las neuronas activas durante el \textit{forward} permiten el paso del gradiente.
+
 \subsection{Sigmoid Activation}
 La función de activación sigmoide es una de las funciones más utilizadas en aprendizaje 
 automático ya a que transforma cualquier número real en un valor entre 0 y 1. Matemáticamente se define como
@@ -232,6 +281,50 @@ Este problema dificulta el entrenamiento de redes neuronales profundas y motivó
 inicialización, como Xavier Initialization, que buscan mantener estable la magnitud de las activaciones y 
 los gradientes a través de las capas de la red.
 \subsection{Tanh Activation}
+La función $\tanh$ se define como:
+
+\[
+\tanh(x)=\frac{e^x-e^{-x}}{e^x+e^{-x}}
+\]
+
+Sus propiedades clave son:
+
+\begin{itemize}
+\item Rango: $(-1,1)$, lo que la hace acotada.
+\item Es simétrica respecto al origen:
+
+\[
+\tanh(-x)=-\tanh(x)
+\]
+
+\item Es suave y diferenciable en todo $\mathbb{R}$; es decir, no tiene picos.
+\end{itemize}
+
+La derivada es:
+
+\[
+\frac{d}{dx}\tanh(x)=1-\tanh^2(x)
+\]
+
+Esto significa que el gradiente es mayor cerca de $x=0$ y disminuye cuando los valores de $x$ son muy grandes o muy pequeños. A este comportamiento se le conoce como \textit{saturación}.
+
+En el \textit{backpropagation}, aplicamos la regla de la cadena:
+
+\[
+\frac{\partial L}{\partial x}
+=
+\frac{\partial L}{\partial y}
+\left(1-\tanh^2(x)\right)
+\]
+
+donde:
+
+\begin{itemize}
+\item $\frac{\partial L}{\partial y}$ es el gradiente que llega desde la capa siguiente.
+\item $1-\tanh^2(x)$ es la derivada de la función.
+\end{itemize}
+
+En conclusión, el gradiente se propaga con mayor intensidad cerca de $0$ y se reduce cuando los valores son muy extremos.
 
 \subsection{MSE Loss Forward \& Backward}
 
@@ -614,6 +707,39 @@ explosión de gradientes, permitiendo un entrenamiento más estable y eficiente.
 
 \subsection{Weight Initialization (Kaiming/He)}
 
+La inicialización de Kaiming o He se utiliza principalmente en redes neuronales que emplean la función de activación ReLU.
+
+El problema es que ReLU convierte en $0$ todos los valores negativos, por lo que aproximadamente la mitad de las neuronas dejan de transmitir información. Esto puede hacer que la información se vaya perdiendo a medida que la red se hace más profunda.
+
+Para evitarlo, los pesos se inicializan de la siguiente manera:
+
+\[
+W \sim \mathcal{N}\left(0,\frac{2}{n_{\text{in}}}\right)
+\]
+
+donde:
+
+\begin{itemize}
+\item $n_{\text{in}}$ es la cantidad de entradas que recibe una neurona.
+\item El número $2$ ayuda a compensar la pérdida de información causada por ReLU.
+\end{itemize}
+
+Esto asegura que:
+
+\[
+\text{Var}(W)=\frac{2}{n_{\text{in}}}
+\]
+
+y, por lo tanto:
+
+\[
+\text{Var}(y)\approx \text{Var}(x)
+\]
+
+El objetivo es mantener una varianza estable y evitar que los valores se vuelvan demasiado pequeños o grandes conforme avanzan por la red neuronal.
+
+En conclusión, la inicialización de Kaiming ayuda a que el aprendizaje sea más estable y eficiente en redes profundas que utilizan ReLU.
+
 \subsection{Dropout Forward}
 
 La función dropout\_forward(x, p, train=True, seed=None) aplica la técnica de dropout lo que realiza es un algoritmo que 
@@ -770,6 +896,39 @@ Contiene la entrada original \texttt{x}, la entrada normalizada \texttt{x\_norm}
 la varianza \texttt{var}, el parámetro de escala \texttt{gamma} y el valor de estabilidad numérica \texttt{eps}.
 
 \subsection{Layer Normalization Forward \& Backward}
+
+Layer Normalization es una técnica que normaliza los datos utilizando las características de cada muestra de manera individual.
+
+\subsection*{Paso 1: Calcular la media y la varianza}
+
+\[
+\mu=\frac{1}{H}\sum_{i=1}^{H}x_i
+\]
+
+\[
+\sigma^2=\frac{1}{H}\sum_{i=1}^{H}(x_i-\mu)^2
+\]
+
+\subsection*{Paso 2: Normalizar los datos}
+
+\[
+\hat{x}_i=
+\frac{x_i-\mu}
+{\sqrt{\sigma^2+\varepsilon}}
+\]
+
+\subsection*{Paso 3: Aplicar los parámetros de ajuste}
+
+\[
+y_i=\gamma \hat{x}_i+\beta
+\]
+
+Durante el \textit{backpropagation} también se calculan los gradientes para actualizar los parámetros y la entrada.
+
+Lo más importante es que Layer Normalization normaliza cada muestra por separado y no todo el lote de datos (\textit{batch}), lo que permite que no dependa del tamaño del \textit{batch}.
+
+En conclusión, Layer Normalization permite que cada muestra mantenga valores equilibrados y facilita el aprendizaje de la red neuronal.
+
 \newpage
 \printbibliography
 \end{document}
